@@ -227,14 +227,14 @@ class DiscuzToDeepseekUtils
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 3);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 15);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 5);
         curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
         curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-        curl_exec($curl);
+        $ok = curl_exec($curl) !== false;
         curl_close($curl);
 
-        return true;
+        return $ok;
     }
 
     /**
