@@ -101,12 +101,22 @@ function discuzToDeepseekInstallPluginInfo($pluginid)
         }
     }
 
-    foreach ($modules as $module) {
-        DB::update('common_plugin_module', array(
-            'menu' => $module['menu'],
-            'navtitle' => $module['navtitle'],
-        ), DB::field('pluginid', $pluginid) . ' AND ' . DB::field('name', $module['name']), true);
+    if (discuzToDeepseekInstallTableExists('common_plugin_module')) {
+        foreach ($modules as $module) {
+            DB::update('common_plugin_module', array(
+                'menu' => $module['menu'],
+                'navtitle' => $module['navtitle'],
+            ), DB::field('pluginid', $pluginid) . ' AND ' . DB::field('name', $module['name']), true);
+        }
     }
+}
+
+function discuzToDeepseekInstallTableExists($table)
+{
+    $tableName = DB::table($table);
+    $tableName = str_replace(array('\\', '_', '%'), array('\\\\', '\\_', '\\%'), $tableName);
+    $row = DB::fetch_first("SHOW TABLES LIKE '" . addslashes($tableName) . "'");
+    return !empty($row);
 }
 
 function discuzToDeepseekInstallVars()
