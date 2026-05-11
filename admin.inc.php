@@ -124,6 +124,8 @@ function discuzToDeepseekEnsureHooks($pluginid)
     $changed = false;
 
     $hooks = array(
+        array('hook' => 'global_footer',        'class' => 'plugin_discuz_to_deepseek_forum',        'method' => 'global_footer'),
+        array('hook' => 'global_footer',        'class' => 'plugin_discuz_to_deepseek_group',        'method' => 'global_footer'),
         array('hook' => 'viewthread_bottom',     'class' => 'plugin_discuz_to_deepseek_forum',        'method' => 'viewthread_bottom_output'),
         array('hook' => 'viewthread_bottom',     'class' => 'plugin_discuz_to_deepseek_group',        'method' => 'viewthread_bottom_output'),
         array('hook' => 'view_article_content',  'class' => 'plugin_discuz_to_deepseek_portal',       'method' => 'view_article_content_output'),

@@ -162,6 +162,14 @@ class plugin_discuz_to_deepseek
 
 class plugin_discuz_to_deepseek_forum extends plugin_discuz_to_deepseek
 {
+    public function global_footer()
+    {
+        if (!isset($_GET['mod']) || $_GET['mod'] !== 'viewthread') {
+            return '';
+        }
+        return $this->renderThreadAutoReply(false);
+    }
+
     public function post_newthread_succeed($param)
     {
         $this->triggerPostEventAutoReply($param, false, false);
@@ -190,6 +198,14 @@ class plugin_discuz_to_deepseek_forum extends plugin_discuz_to_deepseek
 
 class plugin_discuz_to_deepseek_group extends plugin_discuz_to_deepseek
 {
+    public function global_footer()
+    {
+        if (!isset($_GET['mod']) || $_GET['mod'] !== 'viewthread') {
+            return '';
+        }
+        return $this->renderThreadAutoReply(true);
+    }
+
     public function post_newthread_succeed($param)
     {
         $this->triggerPostEventAutoReply($param, true, false);
