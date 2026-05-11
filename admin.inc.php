@@ -17,10 +17,9 @@ $hookEnsureResult = '';
 $hookColumnsText = '';
 if ($currentPluginId > 0) {
     $hookEnsure = discuzToDeepseekEnsureHooks($currentPluginId);
-    $hooksChanged = !empty($hookEnsure['changed']);
     $hookEnsureResult = isset($hookEnsure['message']) ? $hookEnsure['message'] : '';
     $hookColumnsText = isset($hookEnsure['columnsText']) ? $hookEnsure['columnsText'] : '';
-    if ($hooksChanged && function_exists('updatecache')) {
+    if (function_exists('updatecache')) {
         updatecache('plugin');
         updatecache('setting');
     }
@@ -133,9 +132,6 @@ function discuzToDeepseekEnsureHooks($pluginid)
     if (isset($columns['hookscript'])) {
         $baseData['hookscript'] = 'discuz_to_deepseek';
     }
-    if (isset($columns['script'])) {
-        $baseData['script'] = '';
-    }
     if (isset($columns['type'])) {
         $baseData['type'] = 0;
     }
@@ -145,10 +141,6 @@ function discuzToDeepseekEnsureHooks($pluginid)
     if (isset($columns['displayorder'])) {
         $baseData['displayorder'] = 5;
     }
-    if (isset($columns['includefile'])) {
-        $baseData['includefile'] = '';
-    }
-
     foreach ($hooks as $hook) {
         $where = DB::field('pluginid', $pluginid)
             . ' AND ' . DB::field('hook', $hook['hook'])
@@ -160,6 +152,13 @@ function discuzToDeepseekEnsureHooks($pluginid)
         $data['hook'] = $hook['hook'];
         $data['class'] = $hook['class'];
         $data['method'] = $hook['method'];
+        $runtimeDefaults = discuzToDeepseekAdminHookRuntimeDefaults($hook['class']);
+        if (isset($columns['script'])) {
+            $data['script'] = $runtimeDefaults['script'];
+        }
+        if (isset($columns['includefile'])) {
+            $data['includefile'] = $runtimeDefaults['includefile'];
+        }
         $data = discuzToDeepseekAdminFillRequiredColumns($columns, $data);
 
         if ($exists) {
@@ -171,6 +170,29 @@ function discuzToDeepseekEnsureHooks($pluginid)
     }
 
     return array('changed' => $changed, 'message' => $changed ? 'hook_inserted_or_updated' : 'hook_already_exists', 'columnsText' => implode(',', array_keys($columns)));
+}
+
+function discuzToDeepseekAdminHookRuntimeDefaults($className)
+{
+    $className = (string)$className;
+    $script = '';
+    if (strpos($className, '_forum') !== false) {
+        $script = 'forum';
+    } elseif (strpos($className, '_group') !== false) {
+        $script = 'group';
+    } elseif (strpos($className, '_portal') !== false) {
+        $script = 'portal';
+    }
+
+    $isMobileClass = strpos($className, 'mobileplugin_') === 0;
+    $includefile = $isMobileClass
+        ? 'discuz_to_deepseek/discuz_to_deepseek_mobile.class.php'
+        : 'discuz_to_deepseek/discuz_to_deepseek.class.php';
+
+    return array(
+        'script' => $script,
+        'includefile' => $includefile,
+    );
 }
 
 function discuzToDeepseekResolvePluginId($pluginid)
