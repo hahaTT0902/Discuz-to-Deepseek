@@ -193,13 +193,54 @@ class DiscuzToDeepseekUtils
         }
 
         if (!self::isGroupAllowed($cache, isset($_G['groupid']) ? $_G['groupid'] : 0)) {
+            self::debug(!empty($cache['opendebug']), $tid, 'trigger_group_denied');
             return false;
         }
 
         $url = self::buildThreadUrl($tid, $isGroup);
         $come = $isGroup ? 'group' : '';
         $url .= '&internal=1&token=' . rawurlencode(self::internalToken($tid, $come));
-        return self::asyncGet($url);
+        $ok = self::asyncGet($url);
+        if (!$ok) {
+            self::debug(!empty($cache['opendebug']), $tid, 'trigger_async_failed:' . $url);
+        }
+        return $ok;
+    }
+
+    /**
+     * 解析站点根 URL，兼容部分场景下 $_G['siteurl'] 为空。
+     *
+     * @return string
+     */
+    protected static function siteBaseUrl()
+    {
+        global $_G;
+
+        $siteurl = '';
+        if (!empty($_G['siteurl'])) {
+            $siteurl = trim((string)$_G['siteurl']);
+        } elseif (!empty($_G['setting']['siteurl'])) {
+            $siteurl = trim((string)$_G['setting']['siteurl']);
+        }
+
+        if ($siteurl !== '') {
+            if (strpos($siteurl, 'http://') === 0 || strpos($siteurl, 'https://') === 0) {
+                return rtrim($siteurl, '/') . '/';
+            }
+
+            $scheme = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') ? 'https://' : 'http://';
+            $host = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
+            if ($host !== '') {
+                return $scheme . $host . '/' . ltrim($siteurl, '/');
+            }
+        }
+
+        $host = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
+        if ($host === '') {
+            return '';
+        }
+        $scheme = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') ? 'https://' : 'http://';
+        return $scheme . $host . '/';
     }
 
     /**
@@ -224,14 +265,17 @@ class DiscuzToDeepseekUtils
      */
     public static function asyncGet($relativeUrl)
     {
-        global $_G;
-
         $relativeUrl = trim((string)$relativeUrl);
-        if ($relativeUrl === '' || !function_exists('curl_init') || empty($_G['siteurl'])) {
+        if ($relativeUrl === '' || !function_exists('curl_init')) {
             return false;
         }
 
-        $url = rtrim($_G['siteurl'], '/') . '/' . ltrim($relativeUrl, '/');
+        $baseUrl = self::siteBaseUrl();
+        if ($baseUrl === '') {
+            return false;
+        }
+
+        $url = rtrim($baseUrl, '/') . '/' . ltrim($relativeUrl, '/');
         $curl = curl_init($url);
         if (!$curl) {
             return false;

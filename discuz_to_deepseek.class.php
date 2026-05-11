@@ -13,24 +13,61 @@ require_once dirname(__FILE__) . '/api/DiscuzToDeepseekUtils.class.php';
 
 class plugin_discuz_to_deepseek
 {
-    protected function parseEventTid($param)
+    protected function extractTidFromValue($value)
     {
-        if (is_array($param)) {
-            if (isset($param['tid'])) {
-                return intval($param['tid']);
-            }
-            if (isset($param['thread']) && is_array($param['thread']) && isset($param['thread']['tid'])) {
-                return intval($param['thread']['tid']);
+        if (is_numeric($value)) {
+            $tid = intval($value);
+            return $tid > 0 ? $tid : 0;
+        }
+
+        if (!is_array($value)) {
+            return 0;
+        }
+
+        if (isset($value['tid']) && intval($value['tid']) > 0) {
+            return intval($value['tid']);
+        }
+
+        foreach ($value as $item) {
+            $tid = $this->extractTidFromValue($item);
+            if ($tid > 0) {
+                return $tid;
             }
         }
 
-        if (isset($_GET['tid'])) {
+        return 0;
+    }
+
+    protected function resolveCurrentTid()
+    {
+        global $_G;
+
+        if (isset($_GET['tid']) && intval($_GET['tid']) > 0) {
             return intval($_GET['tid']);
         }
-        if (isset($_GET['ptid'])) {
-            return intval($_GET['ptid']);
+        if (isset($_G['tid']) && intval($_G['tid']) > 0) {
+            return intval($_G['tid']);
+        }
+        if (isset($_G['thread']) && is_array($_G['thread']) && isset($_G['thread']['tid']) && intval($_G['thread']['tid']) > 0) {
+            return intval($_G['thread']['tid']);
         }
         return 0;
+    }
+
+    protected function parseEventTid($param)
+    {
+        $tid = $this->extractTidFromValue($param);
+        if ($tid > 0) {
+            return $tid;
+        }
+
+        if (isset($_GET['tid']) && intval($_GET['tid']) > 0) {
+            return intval($_GET['tid']);
+        }
+        if (isset($_GET['ptid']) && intval($_GET['ptid']) > 0) {
+            return intval($_GET['ptid']);
+        }
+        return $this->resolveCurrentTid();
     }
 
     protected function triggerPostEventAutoReply($param, $isGroup, $isReply)
@@ -44,8 +81,13 @@ class plugin_discuz_to_deepseek
         }
 
         $tid = $this->parseEventTid($param);
-        if ($tid > 0) {
-            DiscuzToDeepseekUtils::triggerAutoReply($tid, $isGroup);
+        if ($tid <= 0) {
+            DiscuzToDeepseekUtils::debug(!empty($cache['opendebug']), 0, 'event_tid_empty');
+            return;
+        }
+
+        if (!DiscuzToDeepseekUtils::triggerAutoReply($tid, $isGroup)) {
+            DiscuzToDeepseekUtils::debug(!empty($cache['opendebug']), $tid, 'event_trigger_failed');
         }
     }
 
@@ -56,7 +98,10 @@ class plugin_discuz_to_deepseek
             return '';
         }
 
-        $tid = isset($_GET['tid']) ? $_GET['tid'] : 0;
+        $tid = $this->resolveCurrentTid();
+        if ($tid <= 0) {
+            return '';
+        }
         $url = DiscuzToDeepseekUtils::buildThreadUrl($tid, $isGroup);
         return DiscuzToDeepseekUtils::renderAutoScript($url, !empty($cache['openonload']));
     }

@@ -15,6 +15,10 @@ global $_G;
 
 $cache = DiscuzToDeepseekUtils::pluginConfig();
 $tid   = intval(isset($_GET['tid']) ? $_GET['tid'] : 0);
+$tidFromGlobal = isset($_G['tid']) ? intval($_G['tid']) : 0;
+if ($tid <= 0 && $tidFromGlobal > 0) {
+    $tid = $tidFromGlobal;
+}
 $come  = isset($_GET['come']) ? trim($_GET['come']) : '';
 
 // ── Portal article auto-reply entry point ───────────────────────────────────
@@ -94,6 +98,7 @@ $postuid      = 0;
 $postusername = '';
 
 if (!$tid) {
+    debugDiscuzToDeepseek(!empty($cache['opendebug']), 0, 'tid_empty');
     exit();
 }
 

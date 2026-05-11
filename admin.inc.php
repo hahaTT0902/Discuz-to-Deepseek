@@ -12,6 +12,11 @@ if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 $logTable = C::t('#discuz_to_deepseek#discuz_to_deepseek_error');
 $logTable->ensureTable();
 
+$currentPluginId = isset($pluginid) ? intval($pluginid) : 0;
+if ($currentPluginId > 0) {
+    discuzToDeepseekEnsureHooks($currentPluginId);
+}
+
 if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'del' && $_GET['formhash'] == FORMHASH) {
     $delid = intval($_GET['delid']);
     if ($delid > 0) {
@@ -59,5 +64,57 @@ foreach ($arr as $v) {
 
 showtablefooter();
 echo '<div class="cuspages right">' . $multipage . '</div>';
+
+function discuzToDeepseekEnsureHooks($pluginid)
+{
+    if (!discuzToDeepseekAdminTableExists('common_pluginhook')) {
+        return;
+    }
+
+    $hooks = array(
+        array('hook' => 'viewthread_bottom',     'class' => 'plugin_discuz_to_deepseek_forum',        'method' => 'viewthread_bottom_output'),
+        array('hook' => 'viewthread_bottom',     'class' => 'plugin_discuz_to_deepseek_group',        'method' => 'viewthread_bottom_output'),
+        array('hook' => 'view_article_content',  'class' => 'plugin_discuz_to_deepseek_portal',       'method' => 'view_article_content_output'),
+        array('hook' => 'post_newthread_succeed','class' => 'plugin_discuz_to_deepseek_forum',        'method' => 'post_newthread_succeed'),
+        array('hook' => 'post_reply_succeed',    'class' => 'plugin_discuz_to_deepseek_forum',        'method' => 'post_reply_succeed'),
+        array('hook' => 'post_newthread_succeed','class' => 'plugin_discuz_to_deepseek_group',        'method' => 'post_newthread_succeed'),
+        array('hook' => 'post_reply_succeed',    'class' => 'plugin_discuz_to_deepseek_group',        'method' => 'post_reply_succeed'),
+        array('hook' => 'viewthread_bottom',     'class' => 'mobileplugin_discuz_to_deepseek_forum',  'method' => 'viewthread_bottom_mobile_output'),
+        array('hook' => 'viewthread_bottom',     'class' => 'mobileplugin_discuz_to_deepseek_group',  'method' => 'viewthread_bottom_mobile_output'),
+        array('hook' => 'view_article_content',  'class' => 'mobileplugin_discuz_to_deepseek_portal', 'method' => 'view_article_content_mobile_output'),
+    );
+
+    foreach ($hooks as $hook) {
+        $exists = DB::fetch_first(
+            'SELECT hookid FROM %t WHERE pluginid=%d AND class=%s AND method=%s',
+            array('common_pluginhook', $pluginid, $hook['class'], $hook['method'])
+        );
+
+        $data = array(
+            'pluginid' => $pluginid,
+            'available' => 1,
+            'hook' => $hook['hook'],
+            'hookscript' => 'discuz_to_deepseek',
+            'class' => $hook['class'],
+            'method' => $hook['method'],
+            'type' => 0,
+            'displayorder' => 5,
+        );
+
+        if ($exists) {
+            DB::update('common_pluginhook', $data, DB::field('hookid', $exists['hookid']));
+        } else {
+            DB::insert('common_pluginhook', $data);
+        }
+    }
+}
+
+function discuzToDeepseekAdminTableExists($table)
+{
+    $tableName = DB::table($table);
+    $tableName = str_replace(array('\\', '_', '%'), array('\\\\', '\\_', '\\%'), $tableName);
+    $row = DB::fetch_first("SHOW TABLES LIKE '" . addslashes($tableName) . "'");
+    return !empty($row);
+}
 
 ?>
