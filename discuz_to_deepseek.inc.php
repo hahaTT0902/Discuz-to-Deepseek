@@ -320,7 +320,7 @@ function discuzToDeepseekComponentFile($filename)
 
 function discuzToDeepseekTrustedRequest($cache, $id, $come)
 {
-    $isInternal = isset($_GET['internal']) && intval($_GET['internal']) === 1;
+    $isInternal = isset($_GET['internal']) && $_GET['internal'] === '1';
     if ($isInternal) {
         $token = isset($_GET['token']) ? trim($_GET['token']) : '';
         if ($token === '') {

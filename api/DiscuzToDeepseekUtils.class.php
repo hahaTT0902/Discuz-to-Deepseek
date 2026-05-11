@@ -12,6 +12,8 @@ if (!defined('IN_DISCUZ')) {
 class DiscuzToDeepseekUtils
 {
     const IDENTIFIER = 'discuz_to_deepseek';
+    const ASYNC_CONNECT_TIMEOUT = 2;
+    const ASYNC_TIMEOUT = 5;
 
     /**
      * 读取插件配置缓存（Discuz 将插件变量缓存在 $_G['cache']['plugin'][identifier]）。
@@ -224,7 +226,8 @@ class DiscuzToDeepseekUtils
     {
         global $_G;
 
-        if (!function_exists('curl_init') || empty($_G['siteurl'])) {
+        $relativeUrl = trim((string)$relativeUrl);
+        if ($relativeUrl === '' || !function_exists('curl_init') || empty($_G['siteurl'])) {
             return false;
         }
 
@@ -237,13 +240,13 @@ class DiscuzToDeepseekUtils
         curl_setopt($curl, CURLOPT_HTTPGET, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 5);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::ASYNC_CONNECT_TIMEOUT);
+        curl_setopt($curl, CURLOPT_TIMEOUT, self::ASYNC_TIMEOUT);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Connection: close'));
-        $requestSucceeded = curl_exec($curl) !== false;
+        $requestSent = curl_exec($curl) !== false;
         curl_close($curl);
 
-        return $requestSucceeded;
+        return $requestSent;
     }
 
     /**
