@@ -170,6 +170,74 @@ class DiscuzToDeepseekUtils
     }
 
     /**
+     * 在发帖成功后，异步触发插件入口处理自动回帖。
+     *
+     * @param int  $tid     主题 ID
+     * @param bool $isGroup 是否群组帖子
+     * @return bool
+     */
+    public static function triggerAutoReply($tid, $isGroup)
+    {
+        global $_G;
+
+        $cache = self::pluginConfig();
+        $tid = intval($tid);
+        if ($tid <= 0 || empty($cache['openai'])) {
+            return false;
+        }
+
+        if ($isGroup && empty($cache['opengroup'])) {
+            return false;
+        }
+
+        if (!self::isGroupAllowed($cache, isset($_G['groupid']) ? $_G['groupid'] : 0)) {
+            return false;
+        }
+
+        $url = self::buildThreadUrl($tid, $isGroup);
+        return self::asyncGet($url);
+    }
+
+    /**
+     * 向站内 URL 发起异步 GET 请求，不阻塞当前发帖流程。
+     *
+     * @param string $relativeUrl 站内相对 URL
+     * @return bool
+     */
+    public static function asyncGet($relativeUrl)
+    {
+        global $_G;
+
+        if (!function_exists('curl_init') || empty($_G['siteurl'])) {
+            return false;
+        }
+
+        $url = rtrim($_G['siteurl'], '/') . '/' . ltrim($relativeUrl, '/');
+        $curl = curl_init($url);
+        if (!$curl) {
+            return false;
+        }
+
+        $headers = array('Connection: close');
+        if (!empty($_SERVER['HTTP_COOKIE'])) {
+            $headers[] = 'Cookie: ' . $_SERVER['HTTP_COOKIE'];
+        }
+
+        curl_setopt($curl, CURLOPT_HTTPGET, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 2);
+        curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+        curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_exec($curl);
+        curl_close($curl);
+
+        return true;
+    }
+
+    /**
      * 查找插件可选组件文件（components/ 目录下）。
      *
      * @param string $name 组件名（仅允许字母、数字、下划线、连字符）
