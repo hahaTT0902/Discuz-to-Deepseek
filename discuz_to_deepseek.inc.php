@@ -14,6 +14,7 @@ require_once dirname(__FILE__) . '/api/DiscuzToDeepseekUtils.class.php';
 global $_G;
 
 $cache = DiscuzToDeepseekUtils::pluginConfig();
+$debugEnabled = DiscuzToDeepseekUtils::isDebugEnabled($cache);
 $tid   = intval(isset($_GET['tid']) ? $_GET['tid'] : 0);
 $tidFromGlobal = isset($_G['tid']) ? intval($_G['tid']) : 0;
 if ($tid <= 0 && $tidFromGlobal > 0) {
@@ -98,9 +99,11 @@ $postuid      = 0;
 $postusername = '';
 
 if (!$tid) {
-    debugDiscuzToDeepseek(!empty($cache['opendebug']), 0, 'tid_empty');
+    debugDiscuzToDeepseek($debugEnabled, 0, 'tid_empty');
     exit();
 }
+
+debugDiscuzToDeepseek($debugEnabled, $tid, 'request_start:' . ($come === '' ? 'forum' : $come));
 
 if (empty($cache['openai'])) {
     exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_close'));
@@ -295,12 +298,12 @@ if ($isnewcontent) {
     }
 }
 
-debugDiscuzToDeepseek(!empty($cache['opendebug']), $tid, $reobj);
+debugDiscuzToDeepseek($debugEnabled, $tid, $reobj);
 exit();
 
 function exitWithDebug($cache, $tid, $message)
 {
-    debugDiscuzToDeepseek(!empty($cache['opendebug']), $tid, $message);
+    debugDiscuzToDeepseek(DiscuzToDeepseekUtils::isDebugEnabled($cache), $tid, $message);
     exit();
 }
 

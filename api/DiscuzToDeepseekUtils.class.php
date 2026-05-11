@@ -31,6 +31,17 @@ class DiscuzToDeepseekUtils
     }
 
     /**
+     * 判断调试日志是否开启；历史安装缺少变量时默认开启。
+     */
+    public static function isDebugEnabled($cache)
+    {
+        if (!is_array($cache) || !array_key_exists('opendebug', $cache)) {
+            return true;
+        }
+        return !empty($cache['opendebug']);
+    }
+
+    /**
      * 判断用户组是否在允许列表中；列表为空则放行所有用户组。
      */
     public static function isGroupAllowed($cache, $groupid)
@@ -193,7 +204,7 @@ class DiscuzToDeepseekUtils
         }
 
         if (!self::isGroupAllowed($cache, isset($_G['groupid']) ? $_G['groupid'] : 0)) {
-            self::debug(!empty($cache['opendebug']), $tid, 'trigger_group_denied');
+            self::debug(self::isDebugEnabled($cache), $tid, 'trigger_group_denied');
             return false;
         }
 
@@ -202,7 +213,7 @@ class DiscuzToDeepseekUtils
         $url .= '&internal=1&token=' . rawurlencode(self::internalToken($tid, $come));
         $ok = self::asyncGet($url);
         if (!$ok) {
-            self::debug(!empty($cache['opendebug']), $tid, 'trigger_async_failed:' . $url);
+            self::debug(self::isDebugEnabled($cache), $tid, 'trigger_async_failed:' . $url);
         }
         return $ok;
     }

@@ -73,6 +73,7 @@ class plugin_discuz_to_deepseek
     protected function triggerPostEventAutoReply($param, $isGroup, $isReply)
     {
         $cache = DiscuzToDeepseekUtils::pluginConfig();
+        $debugEnabled = DiscuzToDeepseekUtils::isDebugEnabled($cache);
         if (empty($cache['openai'])) {
             return;
         }
@@ -82,12 +83,14 @@ class plugin_discuz_to_deepseek
 
         $tid = $this->parseEventTid($param);
         if ($tid <= 0) {
-            DiscuzToDeepseekUtils::debug(!empty($cache['opendebug']), 0, 'event_tid_empty');
+            DiscuzToDeepseekUtils::debug($debugEnabled, 0, 'event_tid_empty');
             return;
         }
 
+        DiscuzToDeepseekUtils::debug($debugEnabled, $tid, 'event_received:' . ($isReply ? 'reply' : 'newthread'));
+
         if (!DiscuzToDeepseekUtils::triggerAutoReply($tid, $isGroup)) {
-            DiscuzToDeepseekUtils::debug(!empty($cache['opendebug']), $tid, 'event_trigger_failed');
+            DiscuzToDeepseekUtils::debug($debugEnabled, $tid, 'event_trigger_failed');
         }
     }
 
@@ -131,6 +134,16 @@ class plugin_discuz_to_deepseek_forum extends plugin_discuz_to_deepseek
         $this->triggerPostEventAutoReply($param, false, true);
     }
 
+    public function post_newthread_end($param)
+    {
+        $this->triggerPostEventAutoReply($param, false, false);
+    }
+
+    public function post_reply_end($param)
+    {
+        $this->triggerPostEventAutoReply($param, false, true);
+    }
+
     public function viewthread_bottom_output($a)
     {
         return $this->renderThreadAutoReply(false);
@@ -145,6 +158,16 @@ class plugin_discuz_to_deepseek_group extends plugin_discuz_to_deepseek
     }
 
     public function post_reply_succeed($param)
+    {
+        $this->triggerPostEventAutoReply($param, true, true);
+    }
+
+    public function post_newthread_end($param)
+    {
+        $this->triggerPostEventAutoReply($param, true, false);
+    }
+
+    public function post_reply_end($param)
     {
         $this->triggerPostEventAutoReply($param, true, true);
     }
