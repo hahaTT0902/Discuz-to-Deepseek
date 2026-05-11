@@ -194,6 +194,33 @@ if ($hookEnsureResult !== '') {
     showtablerow('', array('colspan="5"'), array('<div style="color:#999;line-height:1.6;font-size:11px;">Hook 状态：' . dhtmlspecialchars($hookEnsureResult) . '</div>'));
 }
 
+// 显示 Discuz 运行时真实的 hookscript 注册：$_G['setting']['plugins']['hookscript'][script]
+$runtimeHookLines = array();
+$runtimePlugins = isset($_G['setting']['plugins']) && is_array($_G['setting']['plugins']) ? $_G['setting']['plugins'] : array();
+if (!empty($runtimePlugins['hookscript']) && is_array($runtimePlugins['hookscript'])) {
+    foreach ($runtimePlugins['hookscript'] as $script => $hookData) {
+        if (!is_array($hookData)) { continue; }
+        foreach ($hookData as $hookName => $entries) {
+            if (!is_array($entries)) { continue; }
+            $matched = array();
+            foreach ($entries as $entry) {
+                if (is_array($entry) && !empty($entry['module']) && strpos($entry['module'], 'discuz_to_deepseek') !== false) {
+                    $matched[] = $entry['module'];
+                }
+            }
+            if (!empty($matched)) {
+                $runtimeHookLines[] = $script . '/' . $hookName . ' => ' . implode(', ', $matched);
+            }
+        }
+    }
+}
+$runtimeText = empty($runtimeHookLines)
+    ? '<span style="color:#c00;font-weight:bold;">⚠ 运行时 $_G[setting][plugins][hookscript] 中找不到本插件！请点工具→更新缓存。</span>'
+    : implode('<br/>', array_map('dhtmlspecialchars', $runtimeHookLines));
+showtablerow('', array('colspan="5"'), array(
+    '<div style="color:#555;line-height:1.6;font-size:11px;max-height:200px;overflow:auto;background:#f8f8f8;padding:6px;"><strong>Discuz 运行时 Hook 注册（决定能否触发）：</strong><br/>' . $runtimeText . '</div>'
+));
+
 showsubtitle(array(
     'ID',
     lang('plugin/discuz_to_deepseek', 'tid'),
