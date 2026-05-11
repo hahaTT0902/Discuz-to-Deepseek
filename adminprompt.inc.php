@@ -64,7 +64,7 @@ showtablerow('', array('colspan="2"'), array(
 showsetting(discuzToDeepseekPromptText('系统提示词'), 'deepseek_system_prompt', $systemPrompt, 'textarea');
 showsetting(discuzToDeepseekPromptText('用户提示词模板'), 'deepseek_user_prompt', $userPrompt, 'textarea');
 showtablerow('', array('colspan="2"'), array(
-    '<div style="display:flex;gap:10px;">'
+    '<div class="discuz-to-deepseek-prompt-actions">'
     . '<button type="submit" class="btn" name="promptsubmit" value="1">' . discuzToDeepseekPromptText('保存设置') . '</button>'
     . '<button type="submit" class="btn" name="promptreset" value="1" onclick="return confirm(\'' . dhtmlspecialchars(discuzToDeepseekPromptText('确定恢复默认提示词吗？')) . '\');">' . discuzToDeepseekPromptText('恢复默认') . '</button>'
     . '</div>'
