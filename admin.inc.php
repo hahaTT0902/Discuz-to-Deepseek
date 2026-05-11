@@ -11,10 +11,6 @@ if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 
 $logTable = C::t('#discuz_to_deepseek#discuz_to_deepseek_error');
 $logTable->ensureTable();
-$pluginCache = getglobal('plugin/discuz_to_deepseek');
-if (!is_array($pluginCache)) {
-    $pluginCache = array();
-}
 
 $currentPluginId = discuzToDeepseekResolvePluginId(isset($pluginid) ? $pluginid : 0);
 $hookEnsureResult = '';
@@ -27,6 +23,23 @@ if ($currentPluginId > 0) {
         updatecache('plugin');
         updatecache('setting');
     }
+    // 强制重新 loadcache 让本请求拿到新值
+    if (function_exists('loadcache')) {
+        loadcache('plugin', true);
+        loadcache('setting', true);
+    }
+    // _init_plugins 会把 $_G['cache']['plugin'][identifier]['_inc'] 等内容铺到 $_G['plugin']
+    $rebuiltCache = getglobal('cache/plugin/discuz_to_deepseek');
+    if (is_array($rebuiltCache)) {
+        $G = & $GLOBALS['_G'];
+        if (!isset($G['plugin']) || !is_array($G['plugin'])) { $G['plugin'] = array(); }
+        $G['plugin']['discuz_to_deepseek'] = $rebuiltCache;
+    }
+}
+
+$pluginCache = getglobal('plugin/discuz_to_deepseek');
+if (!is_array($pluginCache)) {
+    $pluginCache = array();
 }
 
 if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'del' && $_GET['formhash'] == FORMHASH) {
@@ -80,6 +93,33 @@ if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'forceon' && $_GET['
     if (!is_array($pluginCache)) { $pluginCache = array(); }
 }
 
+if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'cleanorphan' && $_GET['formhash'] == FORMHASH) {
+    $existIds = array();
+    $rows = DB::fetch_all('SELECT pluginid FROM %t WHERE identifier=%s', array('common_plugin', 'discuz_to_deepseek'));
+    foreach ((array)$rows as $r) { $existIds[] = intval($r['pluginid']); }
+    $varRows = DB::fetch_all('SELECT DISTINCT pluginid FROM %t WHERE variable IN (%n)', array('common_pluginvar', array('openai', 'openautoreply', 'opendebug', 'opengroup', 'apikey', 'apiurl', 'apimodel')));
+    $deletedVar = 0; $deletedHook = 0;
+    foreach ((array)$varRows as $vr) {
+        $pid = intval($vr['pluginid']);
+        if ($pid > 0 && !in_array($pid, $existIds, true)) {
+            DB::delete('common_pluginvar', DB::field('pluginid', $pid));
+            $deletedVar++;
+            if (discuzToDeepseekAdminTableExists('common_pluginhook')) {
+                DB::delete('common_pluginhook', DB::field('pluginid', $pid));
+                $deletedHook++;
+            }
+        }
+    }
+    if (function_exists('updatecache')) {
+        updatecache('plugin');
+        updatecache('setting');
+    }
+    $logTable->insert(array(
+        'tid' => 0,
+        'message' => 'clean_orphan:var=' . $deletedVar . ',hook=' . $deletedHook,
+        'addtime' => TIMESTAMP,
+    ));
+
 showtableheader();
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -104,6 +144,16 @@ showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong
 showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前插件ID：' . intval($currentPluginId) . '，已注册Hook数量：' . intval($hookCount) . '。如果发新主题仍无日志，先点击“写入测试日志”确认日志写入链路正常。</div>'));
 showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前配置(cache)：openai=' . intval(!empty($pluginCache['openai'])) . '，openautoreply=' . intval(!empty($pluginCache['openautoreply'])) . '，opendebug=' . (array_key_exists('opendebug', $pluginCache) ? intval(!empty($pluginCache['opendebug'])) : -1) . '，opengroup=' . intval(!empty($pluginCache['opengroup'])) . '</div>'));
 
+// dump 完整 $pluginCache 看实际结构
+$cacheDump = var_export($pluginCache, true);
+if (strlen($cacheDump) > 2000) { $cacheDump = substr($cacheDump, 0, 2000) . '...(truncated)'; }
+showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.5;max-height:200px;overflow:auto;background:#f8f8f8;padding:6px;font-family:monospace;font-size:11px;"><strong>$pluginCache 原始 dump:</strong><br/><pre style="margin:0;white-space:pre-wrap;">' . dhtmlspecialchars($cacheDump) . '</pre></div>'));
+
+// 同时 dump cache/plugin 顶层 key
+$cachePluginTop = getglobal('cache/plugin');
+$topKeys = is_array($cachePluginTop) ? implode(', ', array_keys($cachePluginTop)) : '(空或非数组)';
+showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.5;font-family:monospace;font-size:11px;"><strong>$_G[cache][plugin] 顶层 keys:</strong> ' . dhtmlspecialchars($topKeys) . '</div>'));
+
 // 直接读 pluginvar 与全部 pluginid（用于诊断"是否设错插件"）
 $dbVarLines = array();
 $samePluginIds = array();
@@ -124,6 +174,9 @@ showtablerow('', array('colspan="5"'), array('<div style="color:#c00;line-height
 // 提供"强制开启总开关"按钮：直接更新当前 pluginid 的三个开关到 1
 $forceOnUrl = $baseurl . '&go=forceon&formhash=' . formhash();
 showtablerow('', array('colspan="5"'), array('<a href="' . $forceOnUrl . '" style="color:#fff;background:#c00;padding:4px 10px;border-radius:3px;text-decoration:none;">⚡ 强制开启 openai/openautoreply/opendebug</a> &nbsp;<span style="color:#666;">(直接写 DB 后刷新缓存)</span>'));
+
+$cleanOrphanUrl = $baseurl . '&go=cleanorphan&formhash=' . formhash();
+showtablerow('', array('colspan="5"'), array('<a href="' . $cleanOrphanUrl . '" style="color:#fff;background:#f60;padding:4px 10px;border-radius:3px;text-decoration:none;">🗑 清理孤儿 pluginvar/hook</a> &nbsp;<span style="color:#666;">(删除 common_plugin 不存在的 pluginid 的残留)</span>'));
 
 if ($hookEnsureResult !== '' || $hookColumnsText !== '') {
     showtablerow('', array('colspan="5"'), array('<div style="color:#999;line-height:1.8;">Hook补齐结果：' . dhtmlspecialchars($hookEnsureResult) . '<br/>Hook表字段：' . dhtmlspecialchars($hookColumnsText) . '</div>'));
