@@ -1,41 +1,25 @@
 <?php
 
-/**
- *      This is NOT a freeware, use is subject to license terms
- *      应用名称: AIDeepSeek自动回帖 商业版V1.9.0
- *      下载地址: https://addon.dismall.com/plugins/apoyl_deepseekaipost.html
- *      应用开发者: 凹凸曼
- *      开发者QQ: 3489214354
- *      更新日期: 202605111942
- *      授权域名: zwwx.club
- *      授权码: 2026051119cxxquXxUk1
- *      未经应用程序开发者/所有者的书面许可，不得进行反向工程、反向汇编、反向编译等，不得擅自复制、修改、链接、转载、汇编、发表、出版、发展与之有关的衍生产品、作品等
- */
-
-
-/**
- *      [liyuanchao] (C)2022-2099 http://www.apoyl.com
- *      This is NOT a freeware, use is subject to license terms
- *
- *      $Id: ApoylDeepseekAipost.class.php  2026-4 liyuanchao $
- */
-if (! defined('IN_DISCUZ')) {
+if (!defined('IN_DISCUZ')) {
     exit('Access Denied');
 }
+
 class ApoylDeepseekAipost
 {
-
     const COMP = 'https://api.deepseek.com/chat/completions';
-    private function fetch($url, $postdata = "", $auth = "", $headers = "")
+    const CONNECT_TIMEOUT = 15;
+    const REQUEST_TIMEOUT = 90;
+
+    private function fetch($url, $postdata = '', $auth = '', $headers = array())
     {
-
-
         $curl = curl_init($url);
-        if ($postdata) {
-            curl_setopt($curl, CURLOPT_POST, true);
+        if (!$curl) {
+            return $this->errorResponse('Unable to initialize curl');
+        }
+
+        curl_setopt($curl, CURLOPT_POST, $postdata !== '');
+        if ($postdata !== '') {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $postdata);
-        } else {
-            curl_setopt($curl, CURLOPT_POST, false);
         }
         if ($auth) {
             curl_setopt($curl, CURLOPT_USERPWD, $auth);
@@ -43,77 +27,89 @@ class ApoylDeepseekAipost
         if ($headers) {
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
+
         curl_setopt($curl, CURLOPT_HEADER, false);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 300);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::CONNECT_TIMEOUT);
+        curl_setopt($curl, CURLOPT_TIMEOUT, self::REQUEST_TIMEOUT);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
 
-        try{
-            $response = curl_exec($curl);
+        $response = curl_exec($curl);
+        $errno = curl_errno($curl);
+        $error = curl_error($curl);
+        $httpCode = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+        curl_close($curl);
 
-            if($response===false){
-                if(curl_errno($curl) >0){
-                    return json_encode(array('error'=>array('message'=>'Failed to connect to api.deepseek.com port 443: Timed out ,Code:'.curl_errno($curl))));
-                }
-            }
-        }catch(Exception $e){
-
-            return $e->getMessage();
+        if ($response === false) {
+            return $this->errorResponse($error ? $error : 'DeepSeek request failed', $errno, $httpCode);
         }
-        if (empty($response)) {
-            die(curl_error($curl));
-            curl_close($curl);
-        } else {
 
-            curl_close($curl);
+        if ($response === '') {
+            return $this->errorResponse('DeepSeek returned an empty response', 0, $httpCode);
         }
+
+        if ($httpCode >= 400) {
+            return $this->errorResponse('DeepSeek HTTP error: ' . $httpCode, 0, $httpCode, $response);
+        }
+
         return $response;
     }
-    public function getTextDavinci($prompt,$rolename,$cache)
+
+    public function getTextDavinci($prompt, $rolename, $cache)
     {
+        if (empty($cache['apikey'])) {
+            return $this->errorResponse('DeepSeek API key is empty');
+        }
+
         $headers = array(
             'Content-Type: application/json',
             'Accept: application/json',
             'Authorization: Bearer ' . trim($cache['apikey'])
         );
 
-        if($rolename)
-            $messages[] = array('role' => 'system', 'content' => $this->apoylUtf($rolename,CHARSET));
+        $messages = array();
+        if ($rolename) {
+            $messages[] = array('role' => 'system', 'content' => $this->apoylUtf($rolename, CHARSET));
+        }
 
         $messages[] = array(
             'role' => 'user',
             'content' => $this->apoylUtf($prompt, CHARSET),
         );
 
-        if($cache['deepseekllm']==2){
-            $model='deepseek-v4-pro';
-            $postdata = array(
-                'model' => $model,
-                'messages' => $messages
-            );
-        }else{
-            $model='deepseek-v4-flash';
-            $postdata = array(
-                'model' => $model,
-                'messages' => $messages
-            );
-        }
+        $model = !empty($cache['deepseekllm']) && intval($cache['deepseekllm']) == 2
+            ? 'deepseek-v4-pro'
+            : 'deepseek-v4-flash';
 
-        $resp = $this->fetch(self::COMP, json_encode($postdata), '', $headers);
+        $postdata = array(
+            'model' => $model,
+            'messages' => $messages
+        );
 
+        return $this->fetch(self::COMP, json_encode($postdata), '', $headers);
+    }
 
-        return $resp;
+    private function errorResponse($message, $code = 0, $httpCode = 0, $raw = '')
+    {
+        return json_encode(array(
+            'error' => array(
+                'message' => $message,
+                'code' => $code,
+                'http_code' => $httpCode,
+                'raw' => $raw,
+            )
+        ));
     }
 
     private function apoylUtf($var, $charset)
     {
         if ($charset == 'gbk') {
-            $var = diconv($var, $charset, 'utf-8');
+            return diconv($var, $charset, 'utf-8');
         }
+
         return $var;
     }
 }
 
-    		  	  		  	  		     	   			    		   		     		       	 	   	    		   		     		       	  		 	    		   		     		       	  			     		   		     		       	   		     		   		     		       	 	   	    		   		     		       	  			     		   		     		       	  			     		   		     		       	 	   	    		   		     		       	  			     		   		     		       	  	       		   		     		       	  	 	     		 	      	  		  	  		     	
 ?>

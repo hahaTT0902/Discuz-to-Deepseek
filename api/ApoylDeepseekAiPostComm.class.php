@@ -1,47 +1,59 @@
 <?php
 
-/**
- *      [liyuanchao] (C)2022-2099 http://www.apoyl.com
- *      This is NOT a freeware, use is subject to license terms
- *
- *      $Id: ApoylDeepseekAiPostComm.class.php  2025-2 liyuanchao（凹凸曼） $
- */
-class ApoylDeepseekAiPostComm {
+if (!defined('IN_DISCUZ')) {
+    exit('Access Denied');
+}
 
-	
-	public function factoryAotu($text,$rolename,$cache){
-		$newcontent='';
-		$isnewcontent=false;
-		$reobj='';
-		$role='';
-		if($cache['selectplatform']==2&&$cache['aliyunapikey']&&$cache['openaliyunds']){
+require_once dirname(__FILE__) . '/ApoylDeepseekAiPostUtils.class.php';
 
-			$file=$this->_fileapoylv2('aliyun');
-			if($file){
-				include $file;
-			}
-		}else{
-			require dirname(__FILE__) . '/ApoylDeepseekAipost.class.php';
-			$apoyldeepseekaipost=new ApoylDeepseekAipost();
-			$reobj=$apoyldeepseekaipost->getTextDavinci($text,$rolename,$cache);
+class ApoylDeepseekAiPostComm
+{
+    public function factoryAotu($text, $rolename, $cache)
+    {
+        $newcontent = '';
+        $isnewcontent = false;
+        $reobj = '';
 
-			$obj = json_decode($reobj);
-			if($obj && isset($obj->choices[0]->message->content)){
-				$isnewcontent=true;
-				$newcontent=$obj->choices[0]->message->content;
-			}
-		}
+        if (!empty($cache['selectplatform']) && intval($cache['selectplatform']) == 2 && !empty($cache['aliyunapikey']) && !empty($cache['openaliyunds'])) {
+            $file = ApoylDeepseekAiPostUtils::componentFile('aliyun');
+            if ($file) {
+                include $file;
+            }
+        } else {
+            require_once dirname(__FILE__) . '/ApoylDeepseekAipost.class.php';
+            $apoyldeepseekaipost = new ApoylDeepseekAipost();
+            list($text, $rolename) = $this->applyPromptSettings($text, $rolename, $cache);
+            $reobj = $apoyldeepseekaipost->getTextDavinci($text, $rolename, $cache);
 
-		return array($isnewcontent,$newcontent,$reobj);
-	}
-	private function _fileapoylv2($filename)
-	{
-		$fileapoyl = dirname(__FILE__) . '/../components/' . $filename . '.php';
-		if (file_exists($fileapoyl))
-			return $fileapoyl;
-		return '';
-	}
+            $obj = json_decode($reobj);
+            if ($obj && isset($obj->choices[0]->message->content)) {
+                $newcontent = trim($obj->choices[0]->message->content);
+                $isnewcontent = $newcontent !== '';
+            }
+        }
 
+        return array($isnewcontent, $newcontent, $reobj);
+    }
+
+    private function applyPromptSettings($text, $rolename, $cache)
+    {
+        if (!empty($cache['deepseek_system_prompt'])) {
+            $systemPrompt = trim($cache['deepseek_system_prompt']);
+            $rolename = $rolename ? $systemPrompt . "\n\n" . $rolename : $systemPrompt;
+        }
+
+        if (!empty($cache['deepseek_user_prompt'])) {
+            $template = $cache['deepseek_user_prompt'];
+            $replace = array(
+                '{content}' => $text,
+                '{text}' => $text,
+                '{role}' => $rolename,
+            );
+            $text = strtr($template, $replace);
+        }
+
+        return array($text, $rolename);
+    }
 }
 
 ?>
