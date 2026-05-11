@@ -30,7 +30,12 @@ class DiscuzToDeepseekUtils
         }
 
         $value = @unserialize($cache[$key]);
-        return is_array($value) ? $value : array();
+        if (is_array($value)) {
+            return $value;
+        }
+
+        $items = preg_split('/[\s,]+/', (string)$cache[$key], -1, PREG_SPLIT_NO_EMPTY);
+        return $items ? $items : array();
     }
 
     public static function configCsvInts($value)
