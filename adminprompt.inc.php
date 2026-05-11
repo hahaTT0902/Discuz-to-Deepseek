@@ -32,6 +32,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['promptsubmit'])) {
     cpmsg('plugins_edit_succeed', $baseurl, 'succeed');
 }
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['promptreset'])) {
+    if (!isset($_POST['formhash']) || $_POST['formhash'] != FORMHASH) {
+        cpmsg('submit_invalid', '', 'error');
+    }
+
+    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_system_prompt', discuzToDeepseekPromptDefaultSystem(), discuzToDeepseekPromptText('DeepSeek 系统提示词'));
+    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_user_prompt', discuzToDeepseekPromptDefaultUser(), discuzToDeepseekPromptText('DeepSeek 用户提示词模板'));
+
+    if (function_exists('updatecache')) {
+        updatecache('plugin');
+    }
+
+    cpmsg('plugins_edit_succeed', $baseurl, 'succeed');
+}
+
 $systemPrompt = discuzToDeepseekPromptFetchVar($pluginId, 'deepseek_system_prompt', discuzToDeepseekPromptDefaultSystem());
 $userPrompt = discuzToDeepseekPromptFetchVar($pluginId, 'deepseek_user_prompt', discuzToDeepseekPromptDefaultUser());
 
@@ -48,7 +63,12 @@ showtablerow('', array('colspan="2"'), array(
 
 showsetting(discuzToDeepseekPromptText('系统提示词'), 'deepseek_system_prompt', $systemPrompt, 'textarea');
 showsetting(discuzToDeepseekPromptText('用户提示词模板'), 'deepseek_user_prompt', $userPrompt, 'textarea');
-showsubmit('promptsubmit');
+showtablerow('', array('colspan="2"'), array(
+    '<div class="discuz-to-deepseek-prompt-actions">'
+    . '<button type="submit" class="btn" name="promptsubmit" value="1">' . discuzToDeepseekPromptText('保存设置') . '</button>'
+    . '<button type="submit" class="btn" name="promptreset" value="1">' . discuzToDeepseekPromptText('恢复默认') . '</button>'
+    . '</div>'
+));
 showtablefooter();
 showformfooter();
 

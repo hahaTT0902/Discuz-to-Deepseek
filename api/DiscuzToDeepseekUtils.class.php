@@ -12,6 +12,8 @@ if (!defined('IN_DISCUZ')) {
 class DiscuzToDeepseekUtils
 {
     const IDENTIFIER = 'discuz_to_deepseek';
+    const ASYNC_CONNECT_TIMEOUT = 2;
+    const ASYNC_TIMEOUT = 5;
 
     /**
      * 读取插件配置缓存（Discuz 将插件变量缓存在 $_G['cache']['plugin'][identifier]）。
@@ -167,6 +169,84 @@ class DiscuzToDeepseekUtils
                 . '});</script>';
         }
         return '<script async src="' . $safeUrl . '"></script>';
+    }
+
+    /**
+     * 在发帖成功后，异步触发插件入口处理自动回帖。
+     *
+     * @param int  $tid     主题 ID
+     * @param bool $isGroup 是否群组帖子
+     * @return bool
+     */
+    public static function triggerAutoReply($tid, $isGroup)
+    {
+        global $_G;
+
+        $cache = self::pluginConfig();
+        $tid = intval($tid);
+        if ($tid <= 0 || empty($cache['openai'])) {
+            return false;
+        }
+
+        if ($isGroup && empty($cache['opengroup'])) {
+            return false;
+        }
+
+        if (!self::isGroupAllowed($cache, isset($_G['groupid']) ? $_G['groupid'] : 0)) {
+            return false;
+        }
+
+        $url = self::buildThreadUrl($tid, $isGroup);
+        $come = $isGroup ? 'group' : '';
+        $url .= '&internal=1&token=' . rawurlencode(self::internalToken($tid, $come));
+        return self::asyncGet($url);
+    }
+
+    /**
+     * 生成站内异步触发使用的签名令牌。
+     *
+     * @param int    $id   主题/文章 ID
+     * @param string $come 来源标记
+     * @return string
+     */
+    public static function internalToken($id, $come)
+    {
+        global $_G;
+        $authKey = isset($_G['config']['security']['authkey']) ? $_G['config']['security']['authkey'] : '';
+        return md5(intval($id) . '|' . trim((string)$come) . '|' . $authKey);
+    }
+
+    /**
+     * 向站内 URL 发起异步 GET 请求，不阻塞当前发帖流程。
+     *
+     * @param string $relativeUrl 站内相对 URL
+     * @return bool
+     */
+    public static function asyncGet($relativeUrl)
+    {
+        global $_G;
+
+        $relativeUrl = trim((string)$relativeUrl);
+        if ($relativeUrl === '' || !function_exists('curl_init') || empty($_G['siteurl'])) {
+            return false;
+        }
+
+        $url = rtrim($_G['siteurl'], '/') . '/' . ltrim($relativeUrl, '/');
+        $curl = curl_init($url);
+        if (!$curl) {
+            return false;
+        }
+
+        curl_setopt($curl, CURLOPT_HTTPGET, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::ASYNC_CONNECT_TIMEOUT);
+        curl_setopt($curl, CURLOPT_TIMEOUT, self::ASYNC_TIMEOUT);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Connection: close'));
+        $requestSent = curl_exec($curl) !== false;
+        curl_close($curl);
+
+        return $requestSent;
     }
 
     /**
