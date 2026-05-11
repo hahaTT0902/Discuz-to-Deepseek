@@ -13,6 +13,39 @@ require_once dirname(__FILE__) . '/api/DiscuzToDeepseekUtils.class.php';
 
 class plugin_discuz_to_deepseek
 {
+    protected function canRenderThreadWithReason($cache, $isGroup, &$reason)
+    {
+        global $_G;
+
+        if (empty($cache['openai'])) {
+            $reason = 'render_skip_openai_off';
+            return false;
+        }
+        if ($isGroup && empty($cache['opengroup'])) {
+            $reason = 'render_skip_group_off';
+            return false;
+        }
+        if (!empty($_G['thread']) && intval($_G['thread']['displayorder']) < 0) {
+            $reason = 'render_skip_thread_hidden';
+            return false;
+        }
+        if (!empty($cache['openattach']) && !empty($_G['thread']['attachment'])) {
+            $reason = 'render_skip_attachment';
+            return false;
+        }
+        if (!DiscuzToDeepseekUtils::isGroupAllowed($cache, isset($_G['groupid']) ? $_G['groupid'] : 0)) {
+            $reason = 'render_skip_group_denied';
+            return false;
+        }
+        if (!$isGroup && !DiscuzToDeepseekUtils::isForumAllowed($cache, isset($_G['fid']) ? $_G['fid'] : 0)) {
+            $reason = 'render_skip_forum_denied';
+            return false;
+        }
+
+        $reason = 'render_ready';
+        return true;
+    }
+
     protected function extractTidFromValue($value)
     {
         if (is_numeric($value)) {
@@ -97,15 +130,20 @@ class plugin_discuz_to_deepseek
     protected function renderThreadAutoReply($isGroup)
     {
         $cache = DiscuzToDeepseekUtils::pluginConfig();
-        if (!DiscuzToDeepseekUtils::canRenderThread($cache, $isGroup)) {
+        $debugEnabled = DiscuzToDeepseekUtils::isDebugEnabled($cache);
+        $reason = '';
+        if (!$this->canRenderThreadWithReason($cache, $isGroup, $reason)) {
+            DiscuzToDeepseekUtils::debug($debugEnabled, 0, $reason);
             return '';
         }
 
         $tid = $this->resolveCurrentTid();
         if ($tid <= 0) {
+            DiscuzToDeepseekUtils::debug($debugEnabled, 0, 'render_skip_tid_empty');
             return '';
         }
         $url = DiscuzToDeepseekUtils::buildThreadUrl($tid, $isGroup);
+        DiscuzToDeepseekUtils::debug($debugEnabled, $tid, 'render_injected:' . $url);
         return DiscuzToDeepseekUtils::renderAutoScript($url, !empty($cache['openonload']));
     }
 

@@ -53,15 +53,31 @@ $multipage = multi($num, $prepage, $page, $baseurl);
 $arr = $logTable->range($start, $prepage, 'addtime desc');
 
 $hookCount = 0;
+$hookRows = array();
 if ($currentPluginId > 0 && discuzToDeepseekAdminTableExists('common_pluginhook')) {
     $row = DB::fetch_first('SELECT COUNT(*) AS cnt FROM %t WHERE pluginid=%d', array('common_pluginhook', $currentPluginId));
     $hookCount = $row ? intval($row['cnt']) : 0;
+    $hookRows = DB::fetch_all('SELECT hook,script,includefile,hookscript,class,method,available FROM %t WHERE pluginid=%d ORDER BY hook ASC, class ASC, method ASC', array('common_pluginhook', $currentPluginId));
 }
 
 showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">提示词设置</a> &nbsp; <a href="' . $testlogurl . '">写入测试日志</a>'));
 showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前插件ID：' . intval($currentPluginId) . '，已注册Hook数量：' . intval($hookCount) . '。如果发新主题仍无日志，先点击“写入测试日志”确认日志写入链路正常。</div>'));
 if ($hookEnsureResult !== '' || $hookColumnsText !== '') {
     showtablerow('', array('colspan="5"'), array('<div style="color:#999;line-height:1.8;">Hook补齐结果：' . dhtmlspecialchars($hookEnsureResult) . '<br/>Hook表字段：' . dhtmlspecialchars($hookColumnsText) . '</div>'));
+}
+
+if (!empty($hookRows)) {
+    $hookLines = array();
+    foreach ($hookRows as $hr) {
+        $hookLines[] = 'hook=' . dhtmlspecialchars($hr['hook'])
+            . '; script=' . dhtmlspecialchars($hr['script'])
+            . '; includefile=' . dhtmlspecialchars($hr['includefile'])
+            . '; hookscript=' . dhtmlspecialchars($hr['hookscript'])
+            . '; class=' . dhtmlspecialchars($hr['class'])
+            . '; method=' . dhtmlspecialchars($hr['method'])
+            . '; available=' . intval($hr['available']);
+    }
+    showtablerow('', array('colspan="5"'), array('<div style="max-height:220px;overflow:auto;color:#555;line-height:1.7;"><strong>Hook明细：</strong><br/>' . implode('<br/>', $hookLines) . '</div>'));
 }
 
 showsubtitle(array(
