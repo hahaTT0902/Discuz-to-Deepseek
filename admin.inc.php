@@ -169,6 +169,19 @@ $testlogurl = $baseurl . '&go=testlog&formhash=' . formhash();
 $cleanOrphanUrl = $baseurl . '&go=cleanorphan&formhash=' . formhash();
 $fixModulesUrl = $baseurl . '&go=fixmodules&formhash=' . formhash();
 $rebuildCacheUrl = $baseurl . '&go=rebuildcache&formhash=' . formhash();
+$scanUrl = 'plugin.php?id=discuz_to_deepseek:discuz_to_deepseek&come=scan&formhash=' . formhash();
+
+// 生成 cron 共享 token，供站长配置系统级定时任务使用
+$cronAuthKey = isset($_G['config']['security']['authkey']) ? $_G['config']['security']['authkey'] : '';
+$cronToken = md5('scan|' . $cronAuthKey);
+$siteRoot = '';
+if (!empty($_G['siteurl'])) {
+    $siteRoot = rtrim($_G['siteurl'], '/') . '/';
+} elseif (!empty($_SERVER['HTTP_HOST'])) {
+    $scheme = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') ? 'https://' : 'http://';
+    $siteRoot = $scheme . $_SERVER['HTTP_HOST'] . '/';
+}
+$cronUrl = $siteRoot . 'plugin.php?id=discuz_to_deepseek:discuz_to_deepseek&come=scan&token=' . $cronToken;
 $multipage = multi($num, $prepage, $page, $baseurl);
 $arr = $logTable->range($start, $prepage, 'addtime desc');
 
@@ -206,7 +219,18 @@ showtablerow('', array('colspan="5"'), array(
     . '<a href="' . $testlogurl . '">写入测试日志</a> &nbsp; '
     . '<a href="' . $fixModulesUrl . '" style="color:#c00;font-weight:bold;">⚙ 修复 Hook 注册</a> &nbsp; '
     . '<a href="' . $rebuildCacheUrl . '" style="color:#c00;font-weight:bold;">🔄 强制重建缓存</a> &nbsp; '
+    . '<a href="' . $scanUrl . '" target="_blank" style="color:#080;font-weight:bold;">▶ 立即扫描新帖并回复</a> &nbsp; '
     . '<a href="' . $cleanOrphanUrl . '">清理孤儿配置</a>'
+));
+showtablerow('', array('colspan="5"'), array(
+    '<div style="background:#f6ffed;border:1px solid #b7eb8f;padding:8px;line-height:1.8;">'
+    . '<strong>🎯 新方案：轮询扫描（绕过 Hook）</strong><br/>'
+    . 'Hook 机制在 Discuz X3.5 上注册不稳定，已改用主动扫描：服务器定时调用下面这个 URL，会自动检测最近发表/有新回复但「最后一帖不是 AI」的主题，并触发 AI 回复。<br/>'
+    . '<strong>Linux crontab</strong>（每分钟）：<br/>'
+    . '<code style="background:#fff;padding:4px;display:inline-block;">* * * * * curl -s "' . dhtmlspecialchars($cronUrl) . '" &gt; /dev/null 2&gt;&amp;1</code><br/>'
+    . '<strong>宝塔/cPanel 计划任务</strong> 同样填入上面的 URL。<br/>'
+    . '也可以点击「▶ 立即扫描新帖并回复」手动测试。'
+    . '</div>'
 ));
 showtablerow('', array('colspan="5"'), array(
     '<div style="color:#666;line-height:1.8;">pluginid=' . intval($currentPluginId)

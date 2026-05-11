@@ -22,6 +22,123 @@ if ($tid <= 0 && $tidFromGlobal > 0) {
 }
 $come  = isset($_GET['come']) ? trim($_GET['come']) : '';
 
+// ── Scan mode: 轮询扫描最近新帖，绕开 Discuz Hook 机制 ─────────────────────
+// 触发方式：
+//   1) 后台管理点击 "立即扫描" 按钮 (formhash 校验)
+//   2) 服务器 crontab / 定时任务 调用 plugin.php?id=discuz_to_deepseek:discuz_to_deepseek&come=scan&token=...
+if ($come === 'scan') {
+    $authed = false;
+    // 方式 A: 管理员 + formhash
+    if (!empty($_G['adminid']) && intval($_G['adminid']) == 1
+        && isset($_GET['formhash']) && $_GET['formhash'] === FORMHASH) {
+        $authed = true;
+    }
+    // 方式 B: 共享 token（用于 cron），token = md5('scan|'.authkey)
+    if (!$authed) {
+        $token = isset($_GET['token']) ? trim($_GET['token']) : '';
+        $authKey = isset($_G['config']['security']['authkey']) ? $_G['config']['security']['authkey'] : '';
+        $expected = md5('scan|' . $authKey);
+        if ($token !== '' && discuzToDeepseekHashEquals($expected, $token)) {
+            $authed = true;
+        }
+    }
+    if (!$authed) {
+        echo 'scan:auth_failed';
+        exit();
+    }
+
+    if (empty($cache['openai'])) {
+        echo 'scan:plugin_closed';
+        exit();
+    }
+
+    $userarr = DiscuzToDeepseekUtils::configCsvInts(isset($cache['users']) ? $cache['users'] : '');
+    if (!$userarr) {
+        echo 'scan:no_ai_users_configured';
+        exit();
+    }
+
+    // 扫描窗口（秒），默认最近 1 小时
+    $window = isset($_GET['window']) ? max(60, min(86400, intval($_GET['window']))) : 3600;
+    $limit  = isset($_GET['limit']) ? max(1, min(50, intval($_GET['limit']))) : 20;
+    $since  = TIMESTAMP - $window;
+
+    // 取最近 lastpost 在窗口内的主题；让下游 inc.php 自身判断 "最后一帖是否 AI"，
+    // 这样无论新帖还是用户回帖后需要 AI 继续回，都能涵盖
+    $rows = DB::fetch_all(
+        "SELECT tid, fid, lastposter, replies, lastpost
+         FROM " . DB::table('forum_thread') . "
+         WHERE displayorder >= 0 AND lastpost > %d
+         ORDER BY lastpost DESC LIMIT %d",
+        array($since, $limit)
+    );
+
+    $fired = 0;
+    $skipped = 0;
+    $details = array();
+    foreach ((array)$rows as $row) {
+        $tidScan = intval($row['tid']);
+        if ($tidScan <= 0) {
+            $skipped++;
+            continue;
+        }
+
+        // 论坛白名单
+        if (!DiscuzToDeepseekUtils::isForumAllowed($cache, $row['fid'])) {
+            $skipped++;
+            $details[] = $tidScan . ':forum_denied';
+            continue;
+        }
+
+        // 最近一帖作者：若是 AI 用户则跳过
+        $lastPost = DB::fetch_first(
+            "SELECT authorid FROM " . DB::table('forum_post')
+            . " WHERE tid=%d AND invisible IN (0, -2) ORDER BY dateline DESC LIMIT 1",
+            array($tidScan)
+        );
+        if ($lastPost && in_array(intval($lastPost['authorid']), $userarr)) {
+            $skipped++;
+            $details[] = $tidScan . ':last_is_ai';
+            continue;
+        }
+
+        // 已经达到本主题最大回复数
+        if (!empty($cache['limitnums']) && intval($cache['limitnums']) > 0) {
+            $cnt = C::t('forum_post')->count_visiblepost_by_tid($tidScan);
+            if (intval($cache['limitnums']) <= $cnt) {
+                $skipped++;
+                $details[] = $tidScan . ':reach_limit';
+                continue;
+            }
+        }
+
+        // 触发异步处理（直接构建 URL + token，跳过 triggerAutoReply 中的调用方
+        // 用户组校验，避免 cron guest 身份被拦截）
+        $isGroup = false; // forum_thread 不含群组帖；群组扫描可以单独扩展
+        $workerUrl = DiscuzToDeepseekUtils::buildThreadUrl($tidScan, $isGroup)
+            . '&internal=1&token=' . rawurlencode(DiscuzToDeepseekUtils::internalToken($tidScan, $isGroup ? 'group' : ''));
+        $ok = DiscuzToDeepseekUtils::asyncGet($workerUrl);
+        if ($ok) {
+            $fired++;
+            $details[] = $tidScan . ':fired';
+        } else {
+            $skipped++;
+            $details[] = $tidScan . ':trigger_failed';
+        }
+    }
+
+    // 写日志便于排错
+    if (!empty($cache['opendebug'])) {
+        DiscuzToDeepseekUtils::debug(true, 0, 'scan:fired=' . $fired . ',skipped=' . $skipped . ',total=' . count((array)$rows));
+    }
+
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "scan_done\nfired=$fired\nskipped=$skipped\ntotal=" . count((array)$rows) . "\nwindow={$window}s\n";
+    echo implode("\n", $details);
+    exit();
+}
+// ── End scan mode ───────────────────────────────────────────────────────────
+
 // ── Portal article auto-reply entry point ───────────────────────────────────
 if ($come === 'article') {
     $aid = intval(isset($_GET['aid']) ? $_GET['aid'] : 0);
@@ -109,7 +226,10 @@ if (empty($cache['openai'])) {
     exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_close'));
 }
 
-if (!DiscuzToDeepseekUtils::isGroupAllowed($cache, $_G['groupid'])) {
+$isInternalCall = isset($_GET['internal']) && $_GET['internal'] === '1';
+// 仅对非内部触发（直接由浏览器访问）做调用方用户组检查；
+// 内部触发（hook / scan / cron）已自行决定要回帖，不应被 cron 的 guest 身份阻塞
+if (!$isInternalCall && !DiscuzToDeepseekUtils::isGroupAllowed($cache, $_G['groupid'])) {
     exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_groupid'));
 }
 
