@@ -66,7 +66,7 @@ showsetting(discuzToDeepseekPromptText('用户提示词模板'), 'deepseek_user_
 showtablerow('', array('colspan="2"'), array(
     '<div class="discuz-to-deepseek-prompt-actions">'
     . '<button type="submit" class="btn" name="promptsubmit" value="1">' . discuzToDeepseekPromptText('保存设置') . '</button>'
-    . '<button type="submit" class="btn" name="promptreset" value="1" onclick="return confirm(\'' . dhtmlspecialchars(discuzToDeepseekPromptText('确定恢复默认提示词吗？')) . '\');">' . discuzToDeepseekPromptText('恢复默认') . '</button>'
+    . '<button type="submit" class="btn" name="promptreset" value="1">' . discuzToDeepseekPromptText('恢复默认') . '</button>'
     . '</div>'
 ));
 showtablefooter();
