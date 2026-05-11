@@ -149,7 +149,7 @@ function discuzToDeepseekInstallHooks($pluginid)
         $baseData['hookscript'] = 'discuz_to_deepseek';
     }
     if (isset($columns['script'])) {
-        $baseData['script'] = 'discuz_to_deepseek';
+        $baseData['script'] = '';
     }
     if (isset($columns['type'])) {
         $baseData['type'] = 0;
@@ -161,7 +161,7 @@ function discuzToDeepseekInstallHooks($pluginid)
         $baseData['displayorder'] = 5;
     }
     if (isset($columns['includefile'])) {
-        $baseData['includefile'] = 'discuz_to_deepseek';
+        $baseData['includefile'] = '';
     }
 
     foreach ($hooks as $hook) {
