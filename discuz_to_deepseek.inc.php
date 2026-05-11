@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Discuz to Deepseek
@@ -14,13 +14,83 @@ require_once dirname(__FILE__) . '/api/DiscuzToDeepseekUtils.class.php';
 global $_G;
 
 $cache = DiscuzToDeepseekUtils::pluginConfig();
-$tid = intval($_GET['tid']);
-$come = isset($_GET['come']) ? trim($_GET['come']) : '';
-$text = '';
-$post = null;
-$threadrow = null;
+$tid   = intval(isset($_GET['tid']) ? $_GET['tid'] : 0);
+$come  = isset($_GET['come']) ? trim($_GET['come']) : '';
+
+// ── Portal article auto-reply entry point ───────────────────────────────────
+if ($come === 'article') {
+    $aid = intval(isset($_GET['aid']) ? $_GET['aid'] : 0);
+    if (!$aid) {
+        exit();
+    }
+    if (!isset($_GET['formhash']) || $_GET['formhash'] != FORMHASH) {
+        exit();
+    }
+    if (!DiscuzToDeepseekUtils::canRenderArticle($cache)) {
+        exit();
+    }
+    if (!DiscuzToDeepseekUtils::isGroupAllowed($cache, $_G['groupid'])) {
+        exit();
+    }
+    if (!function_exists('curl_init')) {
+        exit();
+    }
+
+    $userarr = DiscuzToDeepseekUtils::configCsvInts(isset($cache['users']) ? $cache['users'] : '');
+    if (!$userarr) {
+        exit();
+    }
+    $postuid  = $userarr[array_rand($userarr)];
+    $amember  = C::t('common_member')->fetch($postuid);
+    if (!$amember) {
+        exit();
+    }
+
+    $articleTitle   = C::t('portal_article_title')->fetch($aid);
+    $articleContent = C::t('portal_article_content')->fetch($aid);
+    if (!$articleTitle || empty($articleTitle['title'])) {
+        exit();
+    }
+    $bodyText = isset($articleContent['content']) ? strip_tags($articleContent['content']) : '';
+    $bodyText = trim(mb_substr($bodyText, 0, 3000, 'UTF-8'));
+
+    $selectfirst = isset($cache['selectfirst']) ? intval($cache['selectfirst']) : 2;
+    if ($selectfirst == 1) {
+        $atext = trim($articleTitle['title']);
+    } elseif ($selectfirst == 3) {
+        $atext = $bodyText;
+    } else {
+        $atext = trim($articleTitle['title']) . "\n" . $bodyText;
+    }
+
+    if (!trim($atext)) {
+        exit();
+    }
+
+    require_once dirname(__FILE__) . '/api/DiscuzToDeepseekComm.class.php';
+    $acomm = new DiscuzToDeepseekComm();
+    list($aisnew, $anewcontent) = $acomm->factoryAotu($atext, '', $cache);
+    if ($aisnew) {
+        C::t('portal_comment')->insert(array(
+            'aid'       => $aid,
+            'authorid'  => $postuid,
+            'author'    => $amember['username'],
+            'dateline'  => TIMESTAMP,
+            'message'   => discuzToDeepseekCharset($anewcontent, CHARSET),
+            'useip'     => '',
+            'invisible' => 0,
+            'anonymous' => 0,
+        ));
+    }
+    exit();
+}
+// ── End portal article entry point ──────────────────────────────────────────
+
+$text         = '';
+$post         = null;
+$threadrow    = null;
 $quotemessage = '';
-$postuid = 0;
+$postuid      = 0;
 $postusername = '';
 
 if (!$tid) {
@@ -45,7 +115,7 @@ if (!$userarr) {
 }
 
 $postuid = $userarr[array_rand($userarr)];
-$member = C::t('common_member')->fetch($postuid);
+$member  = C::t('common_member')->fetch($postuid);
 if (!$member) {
     exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_username'));
 }
@@ -113,7 +183,7 @@ if (!empty($cache['openfirstvip'])) {
     } else {
         if (stripos($post['message'], '[/quote]') !== false) {
             $parts = explode('[/quote]', $post['message'], 2);
-            $text = $parts[1];
+            $text  = $parts[1];
         } else {
             $text = $post['message'];
         }
@@ -129,7 +199,7 @@ if (!empty($cache['openfirstvip'])) {
         exit();
     }
 
-    $post = C::t('forum_post')->fetch_threadpost_by_tid_invisible($tid, 0);
+    $post   = C::t('forum_post')->fetch_threadpost_by_tid_invisible($tid, 0);
     $thread = C::t('forum_thread')->fetch($tid, 0);
     if (!$post || !$thread || $thread['replies'] > 0) {
         exit();
@@ -178,36 +248,36 @@ if ($isnewcontent) {
     }
 
     $status = defined('IN_MOBILE') ? 8 : 0;
-    $from = !empty($cache['openfrom']) && isset($cache['from']) ? "    \n\n" . $cache['from'] : '';
+    $from   = !empty($cache['openfrom']) && isset($cache['from']) ? "    \n\n" . $cache['from'] : '';
 
     require_once libfile('function/forum');
     $pid = insertpost(array(
-        'fid' => $post['fid'],
-        'tid' => $post['tid'],
-        'first' => '0',
-        'author' => $postusername,
-        'authorid' => $postuid,
-        'subject' => '',
-        'dateline' => TIMESTAMP,
-        'message' => $quotemessage . discuzToDeepseekCharset($newcontent, CHARSET) . $from,
-        'useip' => '',
-        'invisible' => $invisible,
-        'anonymous' => '0',
-        'usesig' => '0',
-        'htmlon' => 0,
-        'bbcodeoff' => 0,
-        'smileyoff' => 0,
+        'fid'         => $post['fid'],
+        'tid'         => $post['tid'],
+        'first'       => '0',
+        'author'      => $postusername,
+        'authorid'    => $postuid,
+        'subject'     => '',
+        'dateline'    => TIMESTAMP,
+        'message'     => $quotemessage . discuzToDeepseekCharset($newcontent, CHARSET) . $from,
+        'useip'       => '',
+        'invisible'   => $invisible,
+        'anonymous'   => '0',
+        'usesig'      => '0',
+        'htmlon'      => 0,
+        'bbcodeoff'   => 0,
+        'smileyoff'   => 0,
         'parseurloff' => 0,
-        'attachment' => '0',
-        'status' => $status
+        'attachment'  => '0',
+        'status'      => $status,
     ));
 
     if ($pid) {
         if ($invisible == -2) {
             C::t('common_moderate')->insert('pid', array(
-                'id' => $pid,
-                'status' => 0,
-                'dateline' => TIMESTAMP
+                'id'       => $pid,
+                'status'   => 0,
+                'dateline' => TIMESTAMP,
             ), false, true);
         }
 
@@ -240,7 +310,6 @@ function discuzToDeepseekCharset($var, $charset)
     if ($charset == 'gbk') {
         return diconv($var, 'utf-8', $charset);
     }
-
     return $var;
 }
 
@@ -285,12 +354,12 @@ function buildQuoteMessage($post, $text)
 {
     require_once libfile('function/post');
 
-    $time = dgmdate($post['dateline']);
+    $time      = dgmdate($post['dateline']);
     $quotemessage = messagecutstr($text, 100);
     $quotemessage = implode("\n", array_slice(explode("\n", $quotemessage), 0, 3));
     $post_reply_quote = lang('forum/misc', 'post_reply_quote', array(
         'author' => $post['author'],
-        'time' => $time
+        'time'   => $time,
     ));
 
     if (!defined('IN_MOBILE')) {
@@ -299,5 +368,3 @@ function buildQuoteMessage($post, $text)
 
     return "\n\n[quote][color=#999999]" . $post_reply_quote . "[/color]\n[color=#999999]" . $quotemessage . "[/color][/quote]";
 }
-
-?>

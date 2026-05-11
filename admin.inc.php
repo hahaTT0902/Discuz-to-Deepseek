@@ -44,14 +44,14 @@ foreach ($arr as $v) {
     $id = intval($v['id']);
     $tid = intval($v['tid']);
     $addtime = !empty($v['addtime']) ? dgmdate($v['addtime'], 'u', '9999', getglobal('setting/dateformat') . ' H:i:s') : '';
-    $message = dhtmlspecialchars($v['message']);
+    $message = nl2br(dhtmlspecialchars($v['message']));
     $delurl = $baseurl . '&page=' . $page . '&go=del&delid=' . $id . '&formhash=' . formhash();
     $delhtml = '<a href="' . $delurl . '" onclick="javascript:if(!confirm(\'' . lang('plugin/discuz_to_deepseek', 'del_msg') . '\')){return false}">' . lang('plugin/discuz_to_deepseek', 'del') . '</a>';
 
-    showtablerow('', array('width="60"', 'width="60"', 'width="160"', 'width="60"', 'width="60"'), array(
+    showtablerow('', array('width="60"', 'width="80"', 'style="white-space:normal;word-break:break-all;line-height:1.7;"', 'width="150"', 'width="60"'), array(
         $id,
         '<a target="_blank" href="forum.php?mod=viewthread&tid=' . $tid . '">' . $tid . '</a>',
-        '<font color="#e4862f">' . $message . '</font>',
+        '<div style="max-width:780px;color:#e4862f;">' . $message . '</div>',
         $addtime,
         $delhtml
     ));

@@ -14,7 +14,7 @@ if ($file) {
     include $file;
 } else {
     showtableheader();
-    showtablerow('', '', array(lang('plugin/discuz_to_deepseek', 'buy_role')));
+    showtablerow('', '', array(lang('plugin/discuz_to_deepseek', 'missing_role')));
     showtablefooter();
 }
 
