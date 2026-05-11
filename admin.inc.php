@@ -50,7 +50,7 @@ $arr = $logTable->range($start, $prepage, 'addtime desc');
 
 $hookCount = 0;
 if ($currentPluginId > 0 && discuzToDeepseekAdminTableExists('common_pluginhook')) {
-    $row = DB::fetch_first('SELECT COUNT(*) AS cnt FROM %t WHERE pluginid=%d AND hookscript=%s', array('common_pluginhook', $currentPluginId, 'discuz_to_deepseek'));
+    $row = DB::fetch_first('SELECT COUNT(*) AS cnt FROM %t WHERE pluginid=%d', array('common_pluginhook', $currentPluginId));
     $hookCount = $row ? intval($row['cnt']) : 0;
 }
 
@@ -91,6 +91,11 @@ function discuzToDeepseekEnsureHooks($pluginid)
         return false;
     }
 
+    $columns = discuzToDeepseekAdminTableColumns('common_pluginhook');
+    if (empty($columns) || !isset($columns['pluginid']) || !isset($columns['hook']) || !isset($columns['class']) || !isset($columns['method'])) {
+        return false;
+    }
+
     $changed = false;
 
     $hooks = array(
@@ -116,16 +121,26 @@ function discuzToDeepseekEnsureHooks($pluginid)
             array('common_pluginhook', $pluginid, $hook['class'], $hook['method'])
         );
 
-        $data = array(
-            'pluginid' => $pluginid,
-            'available' => 1,
-            'hook' => $hook['hook'],
-            'hookscript' => 'discuz_to_deepseek',
-            'class' => $hook['class'],
-            'method' => $hook['method'],
-            'type' => 0,
-            'displayorder' => 5,
-        );
+        $data = array();
+        $data['pluginid'] = $pluginid;
+        $data['hook'] = $hook['hook'];
+        $data['class'] = $hook['class'];
+        $data['method'] = $hook['method'];
+
+        if (isset($columns['available'])) {
+            $data['available'] = 1;
+        }
+        if (isset($columns['hookscript'])) {
+            $data['hookscript'] = 'discuz_to_deepseek';
+        } elseif (isset($columns['script'])) {
+            $data['script'] = 'discuz_to_deepseek';
+        }
+        if (isset($columns['type'])) {
+            $data['type'] = 0;
+        }
+        if (isset($columns['displayorder'])) {
+            $data['displayorder'] = 5;
+        }
 
         if ($exists) {
             DB::update('common_pluginhook', $data, DB::field('hookid', $exists['hookid']));
@@ -155,6 +170,24 @@ function discuzToDeepseekAdminTableExists($table)
     $tableName = str_replace(array('\\', '_', '%'), array('\\\\', '\\_', '\\%'), $tableName);
     $row = DB::fetch_first("SHOW TABLES LIKE '" . addslashes($tableName) . "'");
     return !empty($row);
+}
+
+function discuzToDeepseekAdminTableColumns($table)
+{
+    if (!discuzToDeepseekAdminTableExists($table)) {
+        return array();
+    }
+
+    $rows = DB::fetch_all('SHOW COLUMNS FROM %t', array($table));
+    $columns = array();
+    if (is_array($rows)) {
+        foreach ($rows as $row) {
+            if (!empty($row['Field'])) {
+                $columns[$row['Field']] = true;
+            }
+        }
+    }
+    return $columns;
 }
 
 ?>
