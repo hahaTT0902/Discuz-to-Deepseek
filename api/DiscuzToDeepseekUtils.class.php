@@ -195,7 +195,23 @@ class DiscuzToDeepseekUtils
         }
 
         $url = self::buildThreadUrl($tid, $isGroup);
+        $come = $isGroup ? 'group' : '';
+        $url .= '&internal=1&token=' . rawurlencode(self::internalToken($tid, $come));
         return self::asyncGet($url);
+    }
+
+    /**
+     * 生成站内异步触发使用的签名令牌。
+     *
+     * @param int    $id   主题/文章 ID
+     * @param string $come 来源标记
+     * @return string
+     */
+    public static function internalToken($id, $come)
+    {
+        global $_G;
+        $authKey = isset($_G['config']['security']['authkey']) ? $_G['config']['security']['authkey'] : '';
+        return md5(intval($id) . '|' . trim((string)$come) . '|' . $authKey);
     }
 
     /**
@@ -218,17 +234,12 @@ class DiscuzToDeepseekUtils
             return false;
         }
 
-        $headers = array('Connection: close');
-        if (!empty($_SERVER['HTTP_COOKIE'])) {
-            $headers[] = 'Cookie: ' . $_SERVER['HTTP_COOKIE'];
-        }
-
         curl_setopt($curl, CURLOPT_HTTPGET, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 3);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 5);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 2);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Connection: close'));
         $ok = curl_exec($curl) !== false;
         curl_close($curl);
 
