@@ -1,0 +1,14 @@
+<!--{block return}-->
+<!--{if $openonload}-->
+<script>
+    window.addEventListener('load', function() {
+        var script = document.createElement('script');
+        script.src = "{$apoyl_deepseekaipost_url}";
+        document.body.appendChild(script);
+    });
+</script>
+<!--{else}-->
+<script  async  src="{$apoyl_deepseekaipost_url}"   ></script>
+<!--{/if}-->
+
+<!--{/block}-->
