@@ -117,6 +117,11 @@ function discuzToDeepseekInstallHooks($pluginid)
         return;
     }
 
+    $columns = discuzToDeepseekInstallTableColumns('common_pluginhook');
+    if (empty($columns) || !isset($columns['pluginid']) || !isset($columns['hook']) || !isset($columns['class']) || !isset($columns['method'])) {
+        return;
+    }
+
     $hooks = array(
         array('hook' => 'viewthread_bottom',    'class' => 'plugin_discuz_to_deepseek_forum',          'method' => 'viewthread_bottom_output',            'type' => 0, 'displayorder' => 5),
         array('hook' => 'viewthread_bottom',    'class' => 'plugin_discuz_to_deepseek_group',          'method' => 'viewthread_bottom_output',            'type' => 0, 'displayorder' => 5),
@@ -134,25 +139,44 @@ function discuzToDeepseekInstallHooks($pluginid)
         array('hook' => 'view_article_content', 'class' => 'mobileplugin_discuz_to_deepseek_portal',   'method' => 'view_article_content_mobile_output',  'type' => 0, 'displayorder' => 5),
     );
 
-    foreach ($hooks as $hook) {
-        $exists = DB::fetch_first(
-            'SELECT hookid FROM %t WHERE pluginid=%d AND class=%s AND method=%s',
-            array('common_pluginhook', $pluginid, $hook['class'], $hook['method'])
-        );
+    $baseData = array('pluginid' => intval($pluginid));
+    if (isset($columns['available'])) {
+        $baseData['available'] = 1;
+    }
+    if (isset($columns['hookscript'])) {
+        $baseData['hookscript'] = 'discuz_to_deepseek';
+    }
+    if (isset($columns['script'])) {
+        $baseData['script'] = 'discuz_to_deepseek';
+    }
+    if (isset($columns['type'])) {
+        $baseData['type'] = 0;
+    }
+    if (isset($columns['hooktype'])) {
+        $baseData['hooktype'] = 0;
+    }
+    if (isset($columns['displayorder'])) {
+        $baseData['displayorder'] = 5;
+    }
+    if (isset($columns['includefile'])) {
+        $baseData['includefile'] = 'discuz_to_deepseek';
+    }
 
-        $data = array(
-            'pluginid'     => $pluginid,
-            'available'    => 1,
-            'hook'         => $hook['hook'],
-            'hookscript'   => 'discuz_to_deepseek',
-            'class'        => $hook['class'],
-            'method'       => $hook['method'],
-            'type'         => $hook['type'],
-            'displayorder' => $hook['displayorder'],
-        );
+    foreach ($hooks as $hook) {
+        $where = DB::field('pluginid', $pluginid)
+            . ' AND ' . DB::field('hook', $hook['hook'])
+            . ' AND ' . DB::field('class', $hook['class'])
+            . ' AND ' . DB::field('method', $hook['method']);
+        $exists = DB::fetch_first('SELECT * FROM %t WHERE ' . $where . ' LIMIT 1', array('common_pluginhook'));
+
+        $data = $baseData;
+        $data['hook'] = $hook['hook'];
+        $data['class'] = $hook['class'];
+        $data['method'] = $hook['method'];
+        $data = discuzToDeepseekInstallFillRequiredColumns($columns, $data);
 
         if ($exists) {
-            DB::update('common_pluginhook', $data, DB::field('hookid', $exists['hookid']));
+            DB::update('common_pluginhook', $data, $where);
         } else {
             DB::insert('common_pluginhook', $data);
         }
@@ -165,6 +189,49 @@ function discuzToDeepseekInstallTableExists($table)
     $tableName = str_replace(array('\\', '_', '%'), array('\\\\', '\\_', '\\%'), $tableName);
     $row = DB::fetch_first("SHOW TABLES LIKE '" . addslashes($tableName) . "'");
     return !empty($row);
+}
+
+function discuzToDeepseekInstallTableColumns($table)
+{
+    if (!discuzToDeepseekInstallTableExists($table)) {
+        return array();
+    }
+
+    $rows = DB::fetch_all('SHOW COLUMNS FROM ' . DB::table($table));
+    $columns = array();
+    if (is_array($rows)) {
+        foreach ($rows as $row) {
+            if (!empty($row['Field'])) {
+                $columns[$row['Field']] = $row;
+            }
+        }
+    }
+    return $columns;
+}
+
+function discuzToDeepseekInstallFillRequiredColumns($columns, $data)
+{
+    foreach ($columns as $field => $meta) {
+        if (array_key_exists($field, $data)) {
+            continue;
+        }
+
+        $isNullable = isset($meta['Null']) && strtoupper($meta['Null']) === 'YES';
+        $hasDefault = array_key_exists('Default', $meta) && $meta['Default'] !== null;
+        $isAutoIncrement = !empty($meta['Extra']) && stripos($meta['Extra'], 'auto_increment') !== false;
+        if ($isNullable || $hasDefault || $isAutoIncrement) {
+            continue;
+        }
+
+        $type = isset($meta['Type']) ? strtolower($meta['Type']) : '';
+        if (strpos($type, 'int') !== false || strpos($type, 'float') !== false || strpos($type, 'double') !== false || strpos($type, 'decimal') !== false) {
+            $data[$field] = 0;
+        } else {
+            $data[$field] = '';
+        }
+    }
+
+    return $data;
 }
 
 function discuzToDeepseekInstallVars()

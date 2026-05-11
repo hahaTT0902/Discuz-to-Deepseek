@@ -13,8 +13,13 @@ $logTable = C::t('#discuz_to_deepseek#discuz_to_deepseek_error');
 $logTable->ensureTable();
 
 $currentPluginId = discuzToDeepseekResolvePluginId(isset($pluginid) ? $pluginid : 0);
+$hookEnsureResult = '';
+$hookColumnsText = '';
 if ($currentPluginId > 0) {
-    $hooksChanged = discuzToDeepseekEnsureHooks($currentPluginId);
+    $hookEnsure = discuzToDeepseekEnsureHooks($currentPluginId);
+    $hooksChanged = !empty($hookEnsure['changed']);
+    $hookEnsureResult = isset($hookEnsure['message']) ? $hookEnsure['message'] : '';
+    $hookColumnsText = isset($hookEnsure['columnsText']) ? $hookEnsure['columnsText'] : '';
     if ($hooksChanged && function_exists('updatecache')) {
         updatecache('plugin');
         updatecache('setting');
@@ -56,6 +61,9 @@ if ($currentPluginId > 0 && discuzToDeepseekAdminTableExists('common_pluginhook'
 
 showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">提示词设置</a> &nbsp; <a href="' . $testlogurl . '">写入测试日志</a>'));
 showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前插件ID：' . intval($currentPluginId) . '，已注册Hook数量：' . intval($hookCount) . '。如果发新主题仍无日志，先点击“写入测试日志”确认日志写入链路正常。</div>'));
+if ($hookEnsureResult !== '' || $hookColumnsText !== '') {
+    showtablerow('', array('colspan="5"'), array('<div style="color:#999;line-height:1.8;">Hook补齐结果：' . dhtmlspecialchars($hookEnsureResult) . '<br/>Hook表字段：' . dhtmlspecialchars($hookColumnsText) . '</div>'));
+}
 
 showsubtitle(array(
     'ID',
@@ -88,12 +96,12 @@ echo '<div class="cuspages right">' . $multipage . '</div>';
 function discuzToDeepseekEnsureHooks($pluginid)
 {
     if (!discuzToDeepseekAdminTableExists('common_pluginhook')) {
-        return false;
+        return array('changed' => false, 'message' => 'common_pluginhook_not_exists', 'columnsText' => '');
     }
 
     $columns = discuzToDeepseekAdminTableColumns('common_pluginhook');
     if (empty($columns) || !isset($columns['pluginid']) || !isset($columns['hook']) || !isset($columns['class']) || !isset($columns['method'])) {
-        return false;
+        return array('changed' => false, 'message' => 'hook_columns_invalid', 'columnsText' => implode(',', array_keys($columns)));
     }
 
     $changed = false;
@@ -115,42 +123,52 @@ function discuzToDeepseekEnsureHooks($pluginid)
         array('hook' => 'view_article_content',  'class' => 'mobileplugin_discuz_to_deepseek_portal', 'method' => 'view_article_content_mobile_output'),
     );
 
-    foreach ($hooks as $hook) {
-        $exists = DB::fetch_first(
-            'SELECT hookid FROM %t WHERE pluginid=%d AND class=%s AND method=%s',
-            array('common_pluginhook', $pluginid, $hook['class'], $hook['method'])
-        );
+    $baseData = array();
+    $baseData['pluginid'] = intval($pluginid);
+    if (isset($columns['available'])) {
+        $baseData['available'] = 1;
+    }
+    if (isset($columns['hookscript'])) {
+        $baseData['hookscript'] = 'discuz_to_deepseek';
+    }
+    if (isset($columns['script'])) {
+        $baseData['script'] = 'discuz_to_deepseek';
+    }
+    if (isset($columns['type'])) {
+        $baseData['type'] = 0;
+    }
+    if (isset($columns['hooktype'])) {
+        $baseData['hooktype'] = 0;
+    }
+    if (isset($columns['displayorder'])) {
+        $baseData['displayorder'] = 5;
+    }
+    if (isset($columns['includefile'])) {
+        $baseData['includefile'] = 'discuz_to_deepseek';
+    }
 
-        $data = array();
-        $data['pluginid'] = $pluginid;
+    foreach ($hooks as $hook) {
+        $where = DB::field('pluginid', $pluginid)
+            . ' AND ' . DB::field('hook', $hook['hook'])
+            . ' AND ' . DB::field('class', $hook['class'])
+            . ' AND ' . DB::field('method', $hook['method']);
+        $exists = DB::fetch_first('SELECT * FROM %t WHERE ' . $where . ' LIMIT 1', array('common_pluginhook'));
+
+        $data = $baseData;
         $data['hook'] = $hook['hook'];
         $data['class'] = $hook['class'];
         $data['method'] = $hook['method'];
-
-        if (isset($columns['available'])) {
-            $data['available'] = 1;
-        }
-        if (isset($columns['hookscript'])) {
-            $data['hookscript'] = 'discuz_to_deepseek';
-        } elseif (isset($columns['script'])) {
-            $data['script'] = 'discuz_to_deepseek';
-        }
-        if (isset($columns['type'])) {
-            $data['type'] = 0;
-        }
-        if (isset($columns['displayorder'])) {
-            $data['displayorder'] = 5;
-        }
+        $data = discuzToDeepseekAdminFillRequiredColumns($columns, $data);
 
         if ($exists) {
-            DB::update('common_pluginhook', $data, DB::field('hookid', $exists['hookid']));
+            DB::update('common_pluginhook', $data, $where);
         } else {
             DB::insert('common_pluginhook', $data);
             $changed = true;
         }
     }
 
-    return $changed;
+    return array('changed' => $changed, 'message' => $changed ? 'hook_inserted_or_updated' : 'hook_already_exists', 'columnsText' => implode(',', array_keys($columns)));
 }
 
 function discuzToDeepseekResolvePluginId($pluginid)
@@ -178,16 +196,41 @@ function discuzToDeepseekAdminTableColumns($table)
         return array();
     }
 
-    $rows = DB::fetch_all('SHOW COLUMNS FROM %t', array($table));
+    $rows = DB::fetch_all('SHOW COLUMNS FROM ' . DB::table($table));
     $columns = array();
     if (is_array($rows)) {
         foreach ($rows as $row) {
             if (!empty($row['Field'])) {
-                $columns[$row['Field']] = true;
+                $columns[$row['Field']] = $row;
             }
         }
     }
     return $columns;
+}
+
+function discuzToDeepseekAdminFillRequiredColumns($columns, $data)
+{
+    foreach ($columns as $field => $meta) {
+        if (array_key_exists($field, $data)) {
+            continue;
+        }
+
+        $isNullable = isset($meta['Null']) && strtoupper($meta['Null']) === 'YES';
+        $hasDefault = array_key_exists('Default', $meta) && $meta['Default'] !== null;
+        $isAutoIncrement = !empty($meta['Extra']) && stripos($meta['Extra'], 'auto_increment') !== false;
+        if ($isNullable || $hasDefault || $isAutoIncrement) {
+            continue;
+        }
+
+        $type = isset($meta['Type']) ? strtolower($meta['Type']) : '';
+        if (strpos($type, 'int') !== false || strpos($type, 'float') !== false || strpos($type, 'double') !== false || strpos($type, 'decimal') !== false) {
+            $data[$field] = 0;
+        } else {
+            $data[$field] = '';
+        }
+    }
+
+    return $data;
 }
 
 ?>
