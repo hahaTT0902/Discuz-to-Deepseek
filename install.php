@@ -67,46 +67,106 @@ function discuzToDeepseekInstallText($text)
 
 function discuzToDeepseekInstallPluginInfo($pluginid)
 {
-    $modules = array(
+    // Menu/Admin modules（XML 安装时已注入，这里只更新中文菜单标题）
+    $menuModules = array(
         array('name' => 'admin',       'menu' => discuzToDeepseekInstallText('运行日志'),   'navtitle' => ''),
         array('name' => 'adminprompt', 'menu' => discuzToDeepseekInstallText('提示词设置'), 'navtitle' => ''),
         array('name' => 'adminhelp',   'menu' => discuzToDeepseekInstallText('帮助'),       'navtitle' => ''),
         array('name' => 'nav',         'menu' => 'Discuz to Deepseek',                      'navtitle' => 'Discuz to Deepseek'),
     );
 
-    $plugin = DB::fetch_first('SELECT modules FROM %t WHERE pluginid=%d', array('common_plugin', $pluginid));
-    if ($plugin && !empty($plugin['modules'])) {
-        $storedModules = dunserialize($plugin['modules']);
-        if (is_array($storedModules)) {
-            foreach ($storedModules as $key => $module) {
-                if (!is_array($module) || empty($module['name'])) {
-                    continue;
-                }
-                foreach ($modules as $newModule) {
-                    if ($newModule['name'] == $module['name']) {
-                        $storedModules[$key]['menu'] = $newModule['menu'];
-                        if (isset($storedModules[$key]['navtitle'])) {
-                            $storedModules[$key]['navtitle'] = $newModule['navtitle'];
-                        }
-                    }
-                }
-            }
+    // Hookscript modules（type=0）—— Discuz 3.x 真正用于运行时 hook 触发
+    // 类名约定：plugin_<identifier>_<script>，方法名匹配 hook 点
+    $hookModules = array(
+        'plugin_discuz_to_deepseek_forum',
+        'plugin_discuz_to_deepseek_group',
+        'plugin_discuz_to_deepseek_portal',
+        'mobileplugin_discuz_to_deepseek_forum',
+        'mobileplugin_discuz_to_deepseek_group',
+        'mobileplugin_discuz_to_deepseek_portal',
+    );
 
-            DB::update('common_plugin', array(
-                'name'        => 'Discuz to Deepseek',
-                'description' => discuzToDeepseekInstallText('调用 DeepSeek 为 Discuz 帖子生成自动回复。开源插件 by hahaTT。'),
-                'copyright'   => discuzToDeepseekInstallText('开源插件 by hahaTT'),
-                'modules'     => serialize($storedModules),
-            ), DB::field('pluginid', $pluginid));
+    $plugin = DB::fetch_first('SELECT modules FROM %t WHERE pluginid=%d', array('common_plugin', $pluginid));
+    $storedModules = array();
+    if ($plugin && !empty($plugin['modules'])) {
+        $unserialized = dunserialize($plugin['modules']);
+        if (is_array($unserialized)) {
+            $storedModules = $unserialized;
         }
     }
 
+    // 更新菜单类 module 标题
+    foreach ($storedModules as $key => $module) {
+        if (!is_array($module) || empty($module['name'])) {
+            continue;
+        }
+        foreach ($menuModules as $newModule) {
+            if ($newModule['name'] == $module['name']) {
+                $storedModules[$key]['menu'] = $newModule['menu'];
+                if (array_key_exists('navtitle', $storedModules[$key])) {
+                    $storedModules[$key]['navtitle'] = $newModule['navtitle'];
+                }
+            }
+        }
+    }
+
+    // 注入 hookscript 类型 module（如果不存在）
+    $existingNames = array();
+    foreach ($storedModules as $module) {
+        if (is_array($module) && !empty($module['name'])) {
+            $existingNames[] = $module['name'];
+        }
+    }
+    foreach ($hookModules as $className) {
+        if (in_array($className, $existingNames, true)) {
+            continue;
+        }
+        $storedModules[$className] = array(
+            'name'         => $className,
+            'menu'         => '',
+            'url'          => '',
+            'type'         => '0',
+            'adminid'      => '0',
+            'displayorder' => '0',
+            'navtitle'     => '',
+            'navicon'      => '',
+            'navsubname'   => '',
+            'navsuburl'    => '',
+        );
+    }
+
+    DB::update('common_plugin', array(
+        'name'        => 'Discuz to Deepseek',
+        'description' => discuzToDeepseekInstallText('调用 DeepSeek 为 Discuz 帖子生成自动回复。开源插件 by hahaTT。'),
+        'copyright'   => discuzToDeepseekInstallText('开源插件 by hahaTT'),
+        'modules'     => serialize($storedModules),
+    ), DB::field('pluginid', $pluginid));
+
+    // 同步到 common_plugin_module 表（部分版本使用）
     if (discuzToDeepseekInstallTableExists('common_plugin_module')) {
-        foreach ($modules as $module) {
+        foreach ($menuModules as $module) {
             DB::update('common_plugin_module', array(
                 'menu'     => $module['menu'],
                 'navtitle' => $module['navtitle'],
             ), DB::field('pluginid', $pluginid) . ' AND ' . DB::field('name', $module['name']), true);
+        }
+        foreach ($hookModules as $className) {
+            $existsModule = DB::fetch_first('SELECT * FROM %t WHERE pluginid=%d AND name=%s', array('common_plugin_module', $pluginid, $className));
+            if (!$existsModule) {
+                DB::insert('common_plugin_module', array(
+                    'pluginid'     => $pluginid,
+                    'name'         => $className,
+                    'menu'         => '',
+                    'url'          => '',
+                    'type'         => 0,
+                    'adminid'      => 0,
+                    'displayorder' => 0,
+                    'navtitle'     => '',
+                    'navicon'      => '',
+                    'navsubname'   => '',
+                    'navsuburl'    => '',
+                ));
+            }
         }
     }
 }

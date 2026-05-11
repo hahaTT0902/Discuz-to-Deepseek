@@ -77,6 +77,59 @@ if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'cleanorphan' && $_G
     ));
 }
 
+if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'fixmodules' && $_GET['formhash'] == FORMHASH && $currentPluginId > 0) {
+    $hookModules = array(
+        'plugin_discuz_to_deepseek_forum',
+        'plugin_discuz_to_deepseek_group',
+        'plugin_discuz_to_deepseek_portal',
+        'mobileplugin_discuz_to_deepseek_forum',
+        'mobileplugin_discuz_to_deepseek_group',
+        'mobileplugin_discuz_to_deepseek_portal',
+    );
+    $plugin = DB::fetch_first('SELECT modules FROM %t WHERE pluginid=%d', array('common_plugin', $currentPluginId));
+    $storedModules = array();
+    if ($plugin && !empty($plugin['modules'])) {
+        $unserialized = dunserialize($plugin['modules']);
+        if (is_array($unserialized)) { $storedModules = $unserialized; }
+    }
+    $existingNames = array();
+    foreach ($storedModules as $m) {
+        if (is_array($m) && !empty($m['name'])) { $existingNames[] = $m['name']; }
+    }
+    $added = 0;
+    foreach ($hookModules as $className) {
+        if (in_array($className, $existingNames, true)) { continue; }
+        $storedModules[$className] = array(
+            'name' => $className, 'menu' => '', 'url' => '', 'type' => '0',
+            'adminid' => '0', 'displayorder' => '0', 'navtitle' => '',
+            'navicon' => '', 'navsubname' => '', 'navsuburl' => '',
+        );
+        $added++;
+    }
+    DB::update('common_plugin', array('modules' => serialize($storedModules)), DB::field('pluginid', $currentPluginId));
+    if (discuzToDeepseekAdminTableExists('common_plugin_module')) {
+        foreach ($hookModules as $className) {
+            $em = DB::fetch_first('SELECT * FROM %t WHERE pluginid=%d AND name=%s', array('common_plugin_module', $currentPluginId, $className));
+            if (!$em) {
+                DB::insert('common_plugin_module', array(
+                    'pluginid' => $currentPluginId, 'name' => $className, 'menu' => '', 'url' => '',
+                    'type' => 0, 'adminid' => 0, 'displayorder' => 0,
+                    'navtitle' => '', 'navicon' => '', 'navsubname' => '', 'navsuburl' => '',
+                ));
+            }
+        }
+    }
+    if (function_exists('updatecache')) {
+        updatecache('plugin');
+        updatecache('setting');
+    }
+    $logTable->insert(array(
+        'tid' => 0,
+        'message' => 'fix_modules:added=' . $added . ',total=' . count($storedModules),
+        'addtime' => TIMESTAMP,
+    ));
+}
+
 showtableheader();
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -87,6 +140,7 @@ $baseurl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($plugin
 $prompturl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($pluginid) . '&identifier=discuz_to_deepseek&pmod=adminprompt';
 $testlogurl = $baseurl . '&go=testlog&formhash=' . formhash();
 $cleanOrphanUrl = $baseurl . '&go=cleanorphan&formhash=' . formhash();
+$fixModulesUrl = $baseurl . '&go=fixmodules&formhash=' . formhash();
 $multipage = multi($num, $prepage, $page, $baseurl);
 $arr = $logTable->range($start, $prepage, 'addtime desc');
 
@@ -94,6 +148,24 @@ $hookCount = 0;
 if ($currentPluginId > 0 && discuzToDeepseekAdminTableExists('common_pluginhook')) {
     $row = DB::fetch_first('SELECT COUNT(*) AS cnt FROM %t WHERE pluginid=%d AND available=1', array('common_pluginhook', $currentPluginId));
     $hookCount = $row ? intval($row['cnt']) : 0;
+}
+
+// 关键诊断：common_plugin.modules 字段里 type=0 (hookscript) 的数量
+$hookscriptCount = 0;
+$hookscriptNames = array();
+if ($currentPluginId > 0) {
+    $pluginRow = DB::fetch_first('SELECT modules FROM %t WHERE pluginid=%d', array('common_plugin', $currentPluginId));
+    if ($pluginRow && !empty($pluginRow['modules'])) {
+        $mods = dunserialize($pluginRow['modules']);
+        if (is_array($mods)) {
+            foreach ($mods as $m) {
+                if (is_array($m) && isset($m['type']) && (string)$m['type'] === '0' && !empty($m['name'])) {
+                    $hookscriptCount++;
+                    $hookscriptNames[] = $m['name'];
+                }
+            }
+        }
+    }
 }
 
 $openai = !empty($pluginCache['openai']) ? 1 : 0;
@@ -104,15 +176,18 @@ showtablerow('', array('colspan="5"'), array(
     '<strong>Discuz to Deepseek</strong> &nbsp; '
     . '<a href="' . $prompturl . '">提示词设置</a> &nbsp; '
     . '<a href="' . $testlogurl . '">写入测试日志</a> &nbsp; '
+    . '<a href="' . $fixModulesUrl . '" style="color:#c00;font-weight:bold;">⚙ 修复 Hook 注册</a> &nbsp; '
     . '<a href="' . $cleanOrphanUrl . '">清理孤儿配置</a>'
 ));
 showtablerow('', array('colspan="5"'), array(
     '<div style="color:#666;line-height:1.8;">pluginid=' . intval($currentPluginId)
     . '，hooks=' . intval($hookCount)
-    . '，openai=' . $openai
+    . '，hookscript_modules=' . intval($hookscriptCount) . (empty($hookscriptNames) ? '' : ' (' . dhtmlspecialchars(implode(', ', $hookscriptNames)) . ')')
+    . '<br/>openai=' . $openai
     . '，openautoreply=' . $openautoreply
     . '，opendebug=' . $opendebug
     . '。' . ($openai ? '' : '<span style="color:#c00;">openai=0，自动回复未启用，请到「设置」中开启「启用自动回帖」。</span>')
+    . ($hookscriptCount > 0 ? '' : '<br/><span style="color:#c00;font-weight:bold;">⚠ hookscript_modules=0：Discuz 运行时无法触发本插件 Hook！请点击上方"⚙ 修复 Hook 注册"。</span>')
     . '</div>'
 ));
 if ($hookEnsureResult !== '') {
