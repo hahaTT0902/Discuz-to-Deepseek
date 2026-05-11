@@ -1,0 +1,30 @@
+discuz:
+  base_url: "https://example.com/bbs"   # Discuz 站点根 URL（末尾不加斜杠）
+  login_mode: "cookie"                   # "cookie" 或 "password"
+  username: ""                           # login_mode=password 时填写
+  password: ""                           # login_mode=password 时填写
+  cookie: ""                             # login_mode=cookie 时填写，浏览器复制的原始 Cookie 字符串
+  forum_ids: [2, 36]                     # 要监控的版块 fid 列表
+  fetch_pages: 1                         # 每个版块每次抓取的页数
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+
+deepseek:
+  api_key: "sk-xxx"                      # DeepSeek API Key
+  base_url: "https://api.deepseek.com"
+  model: "deepseek-chat"
+  system_prompt: "你是一位友善、专业的论坛回复助手。请用中文针对帖子内容给出有帮助、不超过200字的回答。"
+  max_tokens: 512
+  temperature: 0.7
+
+bot:
+  poll_interval_seconds: 300             # 轮询间隔（秒）
+  max_replies_per_cycle: 5              # 单轮最多回复数
+  min_post_length: 10                   # 短于此字符数的帖子正文跳过
+  reply_signature: ""                   # 可选：附加在每条回复末尾的签名文字
+  dry_run: false                        # true 时只生成回复内容并打印，不实际发帖（测试用）
+  storage_path: "replied.json"          # 已回复 tid 记录文件路径
+  request_delay_seconds: 8             # 两次发帖之间的延迟（秒），避免触发论坛频控
+
+logging:
+  level: "INFO"                         # 日志级别：DEBUG / INFO / WARNING / ERROR
+  file: "bot.log"                       # 日志文件路径；留空则仅输出到控制台
