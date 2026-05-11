@@ -65,56 +65,6 @@
           <item id="navsuburl"><![CDATA[]]></item>
         </item>
       </item>
-      <item id="__hooks">
-        <item id="0">
-          <item id="hook"><![CDATA[viewthread_bottom]]></item>
-          <item id="class"><![CDATA[plugin_discuz_to_deepseek_forum]]></item>
-          <item id="method"><![CDATA[viewthread_bottom_output]]></item>
-          <item id="type"><![CDATA[output]]></item>
-          <item id="id"><![CDATA[forum]]></item>
-          <item id="displayorder"><![CDATA[5]]></item>
-        </item>
-        <item id="1">
-          <item id="hook"><![CDATA[viewthread_bottom]]></item>
-          <item id="class"><![CDATA[plugin_discuz_to_deepseek_group]]></item>
-          <item id="method"><![CDATA[viewthread_bottom_output]]></item>
-          <item id="type"><![CDATA[output]]></item>
-          <item id="id"><![CDATA[group]]></item>
-          <item id="displayorder"><![CDATA[5]]></item>
-        </item>
-        <item id="2">
-          <item id="hook"><![CDATA[view_article_content]]></item>
-          <item id="class"><![CDATA[plugin_discuz_to_deepseek_portal]]></item>
-          <item id="method"><![CDATA[view_article_content_output]]></item>
-          <item id="type"><![CDATA[output]]></item>
-          <item id="id"><![CDATA[portal]]></item>
-          <item id="displayorder"><![CDATA[5]]></item>
-        </item>
-        <item id="3">
-          <item id="hook"><![CDATA[viewthread_bottom]]></item>
-          <item id="class"><![CDATA[mobileplugin_discuz_to_deepseek_forum]]></item>
-          <item id="method"><![CDATA[viewthread_bottom_mobile_output]]></item>
-          <item id="type"><![CDATA[output]]></item>
-          <item id="id"><![CDATA[mobile_forum]]></item>
-          <item id="displayorder"><![CDATA[5]]></item>
-        </item>
-        <item id="4">
-          <item id="hook"><![CDATA[viewthread_bottom]]></item>
-          <item id="class"><![CDATA[mobileplugin_discuz_to_deepseek_group]]></item>
-          <item id="method"><![CDATA[viewthread_bottom_mobile_output]]></item>
-          <item id="type"><![CDATA[output]]></item>
-          <item id="id"><![CDATA[mobile_group]]></item>
-          <item id="displayorder"><![CDATA[5]]></item>
-        </item>
-        <item id="5">
-          <item id="hook"><![CDATA[view_article_content]]></item>
-          <item id="class"><![CDATA[mobileplugin_discuz_to_deepseek_portal]]></item>
-          <item id="method"><![CDATA[view_article_content_mobile_output]]></item>
-          <item id="type"><![CDATA[output]]></item>
-          <item id="id"><![CDATA[mobile_portal]]></item>
-          <item id="displayorder"><![CDATA[5]]></item>
-        </item>
-      </item>
     </item>
     <item id="version"><![CDATA[X3,X3.1,X3.2,X3.3,X3.4,X3.5,X5]]></item>
     <item id="license"><![CDATA[Open source plugin by hahaTT]]></item>
