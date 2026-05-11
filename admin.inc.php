@@ -44,6 +44,42 @@ if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'testlog' && $_GET['
     ));
 }
 
+if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'forceon' && $_GET['formhash'] == FORMHASH && $currentPluginId > 0) {
+    $forceVars = array('openai' => '1', 'openautoreply' => '1', 'opendebug' => '1');
+    $forceMsg = array();
+    foreach ($forceVars as $vname => $vval) {
+        $exists = DB::fetch_first('SELECT pluginvarid FROM %t WHERE pluginid=%d AND variable=%s', array('common_pluginvar', $currentPluginId, $vname));
+        if ($exists) {
+            DB::update('common_pluginvar', array('value' => $vval), DB::field('pluginvarid', $exists['pluginvarid']));
+            $forceMsg[] = $vname . '=updated';
+        } else {
+            DB::insert('common_pluginvar', array(
+                'pluginid' => $currentPluginId,
+                'title' => $vname,
+                'description' => $vname,
+                'variable' => $vname,
+                'type' => 'select',
+                'value' => $vval,
+                'extra' => 'a:2:{i:0;a:2:{s:5:"title";s:3:"yes";s:5:"value";s:1:"1";}i:1;a:2:{s:5:"title";s:2:"no";s:5:"value";s:1:"0";}}',
+                'displayorder' => 1,
+            ));
+            $forceMsg[] = $vname . '=inserted';
+        }
+    }
+    if (function_exists('updatecache')) {
+        updatecache('plugin');
+        updatecache('setting');
+    }
+    $logTable->insert(array(
+        'tid' => 0,
+        'message' => 'force_on:' . implode(',', $forceMsg),
+        'addtime' => TIMESTAMP,
+    ));
+    // 重新读 cache
+    $pluginCache = getglobal('plugin/discuz_to_deepseek');
+    if (!is_array($pluginCache)) { $pluginCache = array(); }
+}
+
 showtableheader();
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -66,7 +102,29 @@ if ($currentPluginId > 0 && discuzToDeepseekAdminTableExists('common_pluginhook'
 
 showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">提示词设置</a> &nbsp; <a href="' . $testlogurl . '">写入测试日志</a>'));
 showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前插件ID：' . intval($currentPluginId) . '，已注册Hook数量：' . intval($hookCount) . '。如果发新主题仍无日志，先点击“写入测试日志”确认日志写入链路正常。</div>'));
-showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前配置：openai=' . intval(!empty($pluginCache['openai'])) . '，openautoreply=' . intval(!empty($pluginCache['openautoreply'])) . '，opendebug=' . (array_key_exists('opendebug', $pluginCache) ? intval(!empty($pluginCache['opendebug'])) : -1) . '，opengroup=' . intval(!empty($pluginCache['opengroup'])) . '</div>'));
+showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前配置(cache)：openai=' . intval(!empty($pluginCache['openai'])) . '，openautoreply=' . intval(!empty($pluginCache['openautoreply'])) . '，opendebug=' . (array_key_exists('opendebug', $pluginCache) ? intval(!empty($pluginCache['opendebug'])) : -1) . '，opengroup=' . intval(!empty($pluginCache['opengroup'])) . '</div>'));
+
+// 直接读 pluginvar 与全部 pluginid（用于诊断"是否设错插件"）
+$dbVarLines = array();
+$samePluginIds = array();
+if (discuzToDeepseekAdminTableExists('common_pluginvar')) {
+    // 同标识符的所有 pluginid，看是否存在多套
+    $sameRows = DB::fetch_all('SELECT p.pluginid,p.identifier,p.available,p.name FROM %t p WHERE p.identifier=%s', array('common_plugin', 'discuz_to_deepseek'));
+    foreach ((array)$sameRows as $sr) {
+        $samePluginIds[] = 'pluginid=' . intval($sr['pluginid']) . '(available=' . intval($sr['available']) . ',name=' . dhtmlspecialchars($sr['name']) . ')';
+    }
+    $varRows = DB::fetch_all('SELECT pluginid,variable,value FROM %t WHERE variable IN (%n) ORDER BY pluginid ASC, variable ASC', array('common_pluginvar', array('openai', 'openautoreply', 'opendebug', 'opengroup')));
+    foreach ((array)$varRows as $vr) {
+        $dbVarLines[] = 'pluginid=' . intval($vr['pluginid']) . ' ' . dhtmlspecialchars($vr['variable']) . '=' . dhtmlspecialchars($vr['value']);
+    }
+}
+showtablerow('', array('colspan="5"'), array('<div style="color:#c00;line-height:1.8;">同标识符插件：' . (empty($samePluginIds) ? '(无)' : implode(' | ', $samePluginIds)) . '</div>'));
+showtablerow('', array('colspan="5"'), array('<div style="color:#c00;line-height:1.8;">DB真实值(pluginvar)：' . (empty($dbVarLines) ? '(无任何记录！可能 install 未执行或 pluginid 不一致)' : implode('<br/>', $dbVarLines)) . '</div>'));
+
+// 提供"强制开启总开关"按钮：直接更新当前 pluginid 的三个开关到 1
+$forceOnUrl = $baseurl . '&go=forceon&formhash=' . formhash();
+showtablerow('', array('colspan="5"'), array('<a href="' . $forceOnUrl . '" style="color:#fff;background:#c00;padding:4px 10px;border-radius:3px;text-decoration:none;">⚡ 强制开启 openai/openautoreply/opendebug</a> &nbsp;<span style="color:#666;">(直接写 DB 后刷新缓存)</span>'));
+
 if ($hookEnsureResult !== '' || $hookColumnsText !== '') {
     showtablerow('', array('colspan="5"'), array('<div style="color:#999;line-height:1.8;">Hook补齐结果：' . dhtmlspecialchars($hookEnsureResult) . '<br/>Hook表字段：' . dhtmlspecialchars($hookColumnsText) . '</div>'));
 }
