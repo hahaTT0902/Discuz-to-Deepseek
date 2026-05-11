@@ -11,6 +11,10 @@ if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 
 $logTable = C::t('#discuz_to_deepseek#discuz_to_deepseek_error');
 $logTable->ensureTable();
+$pluginCache = getglobal('plugin/discuz_to_deepseek');
+if (!is_array($pluginCache)) {
+    $pluginCache = array();
+}
 
 $currentPluginId = discuzToDeepseekResolvePluginId(isset($pluginid) ? $pluginid : 0);
 $hookEnsureResult = '';
@@ -62,6 +66,7 @@ if ($currentPluginId > 0 && discuzToDeepseekAdminTableExists('common_pluginhook'
 
 showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">提示词设置</a> &nbsp; <a href="' . $testlogurl . '">写入测试日志</a>'));
 showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前插件ID：' . intval($currentPluginId) . '，已注册Hook数量：' . intval($hookCount) . '。如果发新主题仍无日志，先点击“写入测试日志”确认日志写入链路正常。</div>'));
+showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前配置：openai=' . intval(!empty($pluginCache['openai'])) . '，openautoreply=' . intval(!empty($pluginCache['openautoreply'])) . '，opendebug=' . (array_key_exists('opendebug', $pluginCache) ? intval(!empty($pluginCache['opendebug'])) : -1) . '，opengroup=' . intval(!empty($pluginCache['opengroup'])) . '</div>'));
 if ($hookEnsureResult !== '' || $hookColumnsText !== '') {
     showtablerow('', array('colspan="5"'), array('<div style="color:#999;line-height:1.8;">Hook补齐结果：' . dhtmlspecialchars($hookEnsureResult) . '<br/>Hook表字段：' . dhtmlspecialchars($hookColumnsText) . '</div>'));
 }

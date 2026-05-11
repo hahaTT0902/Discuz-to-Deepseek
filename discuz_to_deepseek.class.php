@@ -107,16 +107,20 @@ class plugin_discuz_to_deepseek
     {
         $cache = DiscuzToDeepseekUtils::pluginConfig();
         $debugEnabled = DiscuzToDeepseekUtils::isDebugEnabled($cache);
+        DiscuzToDeepseekUtils::probe(0, 'event_hook_enter:' . ($isGroup ? 'group' : 'forum') . ':' . ($isReply ? 'reply' : 'newthread'));
         if (empty($cache['openai'])) {
+            DiscuzToDeepseekUtils::probe(0, 'event_hook_skip_openai_off');
             return;
         }
         if ($isReply && empty($cache['openautoreply'])) {
+            DiscuzToDeepseekUtils::probe(0, 'event_hook_skip_autoreply_off');
             return;
         }
 
         $tid = $this->parseEventTid($param);
         if ($tid <= 0) {
             DiscuzToDeepseekUtils::debug($debugEnabled, 0, 'event_tid_empty');
+            DiscuzToDeepseekUtils::probe(0, 'event_tid_empty');
             return;
         }
 
@@ -124,6 +128,7 @@ class plugin_discuz_to_deepseek
 
         if (!DiscuzToDeepseekUtils::triggerAutoReply($tid, $isGroup)) {
             DiscuzToDeepseekUtils::debug($debugEnabled, $tid, 'event_trigger_failed');
+            DiscuzToDeepseekUtils::probe($tid, 'event_trigger_failed');
         }
     }
 
@@ -131,19 +136,23 @@ class plugin_discuz_to_deepseek
     {
         $cache = DiscuzToDeepseekUtils::pluginConfig();
         $debugEnabled = DiscuzToDeepseekUtils::isDebugEnabled($cache);
+        DiscuzToDeepseekUtils::probe(0, 'render_hook_enter:' . ($isGroup ? 'group' : 'forum'));
         $reason = '';
         if (!$this->canRenderThreadWithReason($cache, $isGroup, $reason)) {
             DiscuzToDeepseekUtils::debug($debugEnabled, 0, $reason);
+            DiscuzToDeepseekUtils::probe(0, $reason);
             return '';
         }
 
         $tid = $this->resolveCurrentTid();
         if ($tid <= 0) {
             DiscuzToDeepseekUtils::debug($debugEnabled, 0, 'render_skip_tid_empty');
+            DiscuzToDeepseekUtils::probe(0, 'render_skip_tid_empty');
             return '';
         }
         $url = DiscuzToDeepseekUtils::buildThreadUrl($tid, $isGroup);
         DiscuzToDeepseekUtils::debug($debugEnabled, $tid, 'render_injected:' . $url);
+        DiscuzToDeepseekUtils::probe($tid, 'render_injected:' . $url);
         return DiscuzToDeepseekUtils::renderAutoScript($url, !empty($cache['openonload']));
     }
 

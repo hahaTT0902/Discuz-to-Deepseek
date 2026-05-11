@@ -346,6 +346,14 @@ class DiscuzToDeepseekUtils
     }
 
     /**
+     * 强制写入运行探针日志（忽略 opendebug 开关）。
+     */
+    public static function probe($tid, $message)
+    {
+        self::debug(true, $tid, '[probe] ' . $message);
+    }
+
+    /**
      * 向后兼容别名：等同于 debug()。
      */
     public static function runtimeLog($cache, $tid, $message)
