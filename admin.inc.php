@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Discuz to Deepseek
+ * 开源插件 by hahaTT
+ */
+
 if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
     exit('Access Denied');
 }
@@ -25,7 +30,7 @@ $prompturl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($plug
 $multipage = multi($num, $prepage, $page, $baseurl);
 $arr = $logTable->range($start, $prepage, 'addtime desc');
 
-showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">Prompt Settings</a>'));
+showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">提示词设置</a>'));
 
 showsubtitle(array(
     'ID',

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Discuz to Deepseek
+ * 开源插件 by hahaTT
+ */
+
 if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
     exit('Access Denied');
 }
@@ -55,39 +60,39 @@ $finish = true;
 function discuzToDeepseekInstallVars()
 {
     return array(
-        array('displayorder' => 1, 'title' => 'Enable Auto Reply', 'description' => 'Enable DeepSeek automatic replies.', 'variable' => 'openai', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 2, 'title' => 'DeepSeek API Key', 'description' => 'Bearer token for DeepSeek API.', 'variable' => 'apikey', 'type' => 'text', 'value' => '', 'extra' => ''),
-        array('displayorder' => 3, 'title' => 'Posting User UIDs', 'description' => 'Comma-separated user IDs used to publish AI replies, for example: 2,3,8.', 'variable' => 'users', 'type' => 'text', 'value' => '', 'extra' => ''),
-        array('displayorder' => 4, 'title' => 'Allowed User Groups', 'description' => 'User groups that may trigger auto replies.', 'variable' => 'groups', 'type' => 'group', 'value' => '', 'extra' => ''),
-        array('displayorder' => 5, 'title' => 'Allowed Forums', 'description' => 'Forums where auto replies are enabled.', 'variable' => 'forums', 'type' => 'forum', 'value' => '', 'extra' => ''),
-        array('displayorder' => 6, 'title' => 'Model', 'description' => 'DeepSeek model mode.', 'variable' => 'deepseekllm', 'type' => 'select', 'value' => '1', 'extra' => "1=deepseek-v4-flash\n2=deepseek-v4-pro"),
-        array('displayorder' => 7, 'title' => 'System Prompt', 'description' => 'Optional system prompt sent to DeepSeek.', 'variable' => 'deepseek_system_prompt', 'type' => 'textarea', 'value' => '', 'extra' => ''),
-        array('displayorder' => 8, 'title' => 'User Prompt Template', 'description' => 'Optional template. Variables: {content}, {text}, {role}.', 'variable' => 'deepseek_user_prompt', 'type' => 'textarea', 'value' => '', 'extra' => ''),
-        array('displayorder' => 9, 'title' => 'Auto Reply Latest Post', 'description' => 'Reply to the latest visible post instead of only first post.', 'variable' => 'openautoreply', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 10, 'title' => 'Quote Source Post', 'description' => 'Add quote block before generated reply.', 'variable' => 'openquote', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 11, 'title' => 'Ignore Threads With Attachments', 'description' => 'Do not auto reply when a thread or source post has attachments.', 'variable' => 'openattach', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 12, 'title' => 'Debug Logs', 'description' => 'Write DeepSeek responses and errors to plugin logs.', 'variable' => 'opendebug', 'type' => 'radio', 'value' => '1', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 13, 'title' => 'Render After Page Load', 'description' => 'Delay script injection until the page load event.', 'variable' => 'openonload', 'type' => 'radio', 'value' => '1', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 14, 'title' => 'Enable Group Threads', 'description' => 'Enable automatic replies for Discuz group threads.', 'variable' => 'opengroup', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 15, 'title' => 'Enable Portal Articles', 'description' => 'Enable automatic replies for portal article pages.', 'variable' => 'openarticle', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 16, 'title' => 'Maximum Replies Per Thread', 'description' => '0 means unlimited.', 'variable' => 'limitnums', 'type' => 'text', 'value' => '0', 'extra' => ''),
-        array('displayorder' => 17, 'title' => 'Source Content', 'description' => 'Choose the content sent to DeepSeek for the first post.', 'variable' => 'selectfirst', 'type' => 'select', 'value' => '1', 'extra' => "1=Subject only\n2=Subject and content\n3=Content only"),
-        array('displayorder' => 18, 'title' => 'Moderate AI Replies', 'description' => 'Put AI replies into moderation unless the trigger group is exempt.', 'variable' => 'openinvisible', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 19, 'title' => 'Moderation Exempt Groups', 'description' => 'Groups that can publish AI replies directly when moderation is enabled.', 'variable' => 'mgroups', 'type' => 'group', 'value' => '', 'extra' => ''),
-        array('displayorder' => 20, 'title' => 'Append Footer', 'description' => 'Append a footer text after generated replies.', 'variable' => 'openfrom', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 21, 'title' => 'Footer Text', 'description' => 'Footer text appended when Append Footer is enabled.', 'variable' => 'from', 'type' => 'text', 'value' => '', 'extra' => ''),
-        array('displayorder' => 22, 'title' => 'Enable Type Limit Component', 'description' => 'Optional extension hook. Requires components/type.php.', 'variable' => 'openlimittype', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 23, 'title' => 'Enable Thread Time Limit', 'description' => 'Only reply to threads newer than the configured time.', 'variable' => 'opentime', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 24, 'title' => 'Thread Time Limit', 'description' => 'Example: 2026-01-01 00:00:00. Used only when Thread Time Limit is enabled.', 'variable' => 'limittime', 'type' => 'text', 'value' => '', 'extra' => ''),
-        array('displayorder' => 25, 'title' => 'Enable Reply Delay', 'description' => 'Wait before replying after the latest thread activity.', 'variable' => 'opendelayreply', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 26, 'title' => 'Reply Delay Seconds', 'description' => 'Seconds or random range such as 60~300.', 'variable' => 'delaytime', 'type' => 'text', 'value' => '0', 'extra' => ''),
-        array('displayorder' => 27, 'title' => 'Enable First VIP Component', 'description' => 'Optional extension hook. Requires components/firstvip.php.', 'variable' => 'openfirstvip', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 28, 'title' => 'Enable Role Component', 'description' => 'Optional extension hook. Requires components/role.php.', 'variable' => 'openrole', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 29, 'title' => 'Reply Style Limit', 'description' => 'Append a built-in style instruction to the prompt.', 'variable' => 'openlimit', 'type' => 'select', 'value' => '0', 'extra' => "0=None\n1=Concise\n2=Natural\n3=Friendly forum style"),
-        array('displayorder' => 30, 'title' => 'Enable Limit Trigger Component', 'description' => 'Optional extension hook. Requires components/limittriggering.php.', 'variable' => 'openlimittriggering', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
-        array('displayorder' => 31, 'title' => 'AI Platform', 'description' => 'DeepSeek is the built-in platform. Aliyun requires optional component support.', 'variable' => 'selectplatform', 'type' => 'select', 'value' => '1', 'extra' => "1=DeepSeek\n2=Aliyun component"),
-        array('displayorder' => 32, 'title' => 'Aliyun API Key', 'description' => 'Used only by optional Aliyun component.', 'variable' => 'aliyunapikey', 'type' => 'text', 'value' => '', 'extra' => ''),
-        array('displayorder' => 33, 'title' => 'Enable Aliyun Component', 'description' => 'Optional extension hook. Requires components/aliyun.php.', 'variable' => 'openaliyunds', 'type' => 'radio', 'value' => '0', 'extra' => "1=Yes\n0=No"),
+        array('displayorder' => 1, 'title' => '启用自动回帖', 'description' => '开启后使用 DeepSeek 自动生成回帖。', 'variable' => 'openai', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 2, 'title' => 'DeepSeek 接口密钥', 'description' => 'DeepSeek 接口密钥。', 'variable' => 'apikey', 'type' => 'text', 'value' => '', 'extra' => ''),
+        array('displayorder' => 3, 'title' => '发帖用户 UID', 'description' => '用于发布 AI 回复的用户 UID，多个用英文逗号分隔，例如：2,3,8。', 'variable' => 'users', 'type' => 'text', 'value' => '', 'extra' => ''),
+        array('displayorder' => 4, 'title' => '允许触发的用户组', 'description' => '只有这些用户组访问帖子时才会触发自动回帖。', 'variable' => 'groups', 'type' => 'group', 'value' => '', 'extra' => ''),
+        array('displayorder' => 5, 'title' => '允许回帖的版块', 'description' => '只在选中的版块启用自动回帖。', 'variable' => 'forums', 'type' => 'forum', 'value' => '', 'extra' => ''),
+        array('displayorder' => 6, 'title' => 'DeepSeek 模型', 'description' => '选择要使用的 DeepSeek 模型模式。', 'variable' => 'deepseekllm', 'type' => 'select', 'value' => '1', 'extra' => "1=deepseek-v4-flash\n2=deepseek-v4-pro"),
+        array('displayorder' => 7, 'title' => '系统提示词', 'description' => '作为系统消息发送给 DeepSeek 的提示词。', 'variable' => 'deepseek_system_prompt', 'type' => 'textarea', 'value' => '', 'extra' => ''),
+        array('displayorder' => 8, 'title' => '用户提示词模板', 'description' => '可选模板，支持变量：{content}、{text}、{role}。', 'variable' => 'deepseek_user_prompt', 'type' => 'textarea', 'value' => '', 'extra' => ''),
+        array('displayorder' => 9, 'title' => '回复最新楼层', 'description' => '开启后回复最新可见楼层；关闭时只处理首帖。', 'variable' => 'openautoreply', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 10, 'title' => '引用来源内容', 'description' => '在 AI 回复前添加引用块。', 'variable' => 'openquote', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 11, 'title' => '有附件时跳过', 'description' => '帖子或来源楼层带附件时不自动回帖。', 'variable' => 'openattach', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 12, 'title' => '记录调试日志', 'description' => '把 DeepSeek 返回内容和错误写入插件日志。', 'variable' => 'opendebug', 'type' => 'radio', 'value' => '1', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 13, 'title' => '页面加载后触发', 'description' => '等待页面 load 事件后再插入触发脚本。', 'variable' => 'openonload', 'type' => 'radio', 'value' => '1', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 14, 'title' => '启用群组帖子', 'description' => '允许群组帖子触发自动回帖。', 'variable' => 'opengroup', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 15, 'title' => '启用门户文章', 'description' => '允许门户文章页触发自动回复。', 'variable' => 'openarticle', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 16, 'title' => '每帖最大回复数', 'description' => '达到该回复数后不再自动回帖，0 表示不限制。', 'variable' => 'limitnums', 'type' => 'text', 'value' => '0', 'extra' => ''),
+        array('displayorder' => 17, 'title' => '首帖取值范围', 'description' => '选择首帖中发送给 DeepSeek 的内容。', 'variable' => 'selectfirst', 'type' => 'select', 'value' => '1', 'extra' => "1=只取标题\n2=标题和内容\n3=只取内容"),
+        array('displayorder' => 18, 'title' => 'AI 回复进入审核', 'description' => '开启后，非免审用户组触发的 AI 回复进入审核。', 'variable' => 'openinvisible', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 19, 'title' => '免审用户组', 'description' => '启用审核后，这些用户组触发的 AI 回复可直接发布。', 'variable' => 'mgroups', 'type' => 'group', 'value' => '', 'extra' => ''),
+        array('displayorder' => 20, 'title' => '追加回复尾巴', 'description' => '在生成回复后追加固定文本。', 'variable' => 'openfrom', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 21, 'title' => '回复尾巴内容', 'description' => '开启追加回复尾巴后使用的固定文本。', 'variable' => 'from', 'type' => 'text', 'value' => '', 'extra' => ''),
+        array('displayorder' => 22, 'title' => '启用类型限制组件', 'description' => '可选扩展，需要 components/type.php。', 'variable' => 'openlimittype', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 23, 'title' => '启用发帖时间限制', 'description' => '只回复指定时间之后发布的帖子。', 'variable' => 'opentime', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 24, 'title' => '发帖时间限制', 'description' => '示例：2026-01-01 00:00:00，仅在启用时间限制后生效。', 'variable' => 'limittime', 'type' => 'text', 'value' => '', 'extra' => ''),
+        array('displayorder' => 25, 'title' => '启用延迟回复', 'description' => '距离帖子最后活动不足指定秒数时不回复。', 'variable' => 'opendelayreply', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 26, 'title' => '延迟回复秒数', 'description' => '填写秒数或随机范围，例如：60~300。', 'variable' => 'delaytime', 'type' => 'text', 'value' => '0', 'extra' => ''),
+        array('displayorder' => 27, 'title' => '启用首楼 VIP 组件', 'description' => '可选扩展，需要 components/firstvip.php。', 'variable' => 'openfirstvip', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 28, 'title' => '启用角色组件', 'description' => '可选扩展，需要 components/role.php。', 'variable' => 'openrole', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 29, 'title' => '回复风格限制', 'description' => '给提示词追加内置风格要求。', 'variable' => 'openlimit', 'type' => 'select', 'value' => '0', 'extra' => "0=不限制\n1=简短\n2=自然且不重复原文\n3=友好的论坛回复风格"),
+        array('displayorder' => 30, 'title' => '启用限制触发组件', 'description' => '可选扩展，需要 components/limittriggering.php。', 'variable' => 'openlimittriggering', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
+        array('displayorder' => 31, 'title' => 'AI 平台', 'description' => '内置平台为 DeepSeek；阿里云需要可选组件支持。', 'variable' => 'selectplatform', 'type' => 'select', 'value' => '1', 'extra' => "1=DeepSeek\n2=阿里云组件"),
+        array('displayorder' => 32, 'title' => '阿里云接口密钥', 'description' => '仅可选阿里云组件使用。', 'variable' => 'aliyunapikey', 'type' => 'text', 'value' => '', 'extra' => ''),
+        array('displayorder' => 33, 'title' => '启用阿里云组件', 'description' => '可选扩展，需要 components/aliyun.php。', 'variable' => 'openaliyunds', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
     );
 }
 

@@ -4,7 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $php = Join-Path $root '.tools\php\php.exe'
 
 if (!(Test-Path $php)) {
-    throw "PHP not found at $php. Install the portable PHP runtime first."
+    throw "PHP runtime not found at $php."
 }
 
 $files = Get-ChildItem -Path $root -Recurse -Filter *.php |
@@ -26,4 +26,4 @@ if ($failed.Count -gt 0) {
     exit 1
 }
 
-Write-Host "Lint passed for $($files.Count) PHP files."
+Write-Host "PHP lint passed for $($files.Count) files."

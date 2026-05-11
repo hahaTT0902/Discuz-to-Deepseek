@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Discuz to Deepseek
+ * 开源插件 by hahaTT
+ */
+
 if (!defined('IN_DISCUZ')) {
     exit('Access Denied');
 }
@@ -14,7 +19,7 @@ class DiscuzToDeepseekClient
     {
         $curl = curl_init($url);
         if (!$curl) {
-            return $this->errorResponse('Unable to initialize curl');
+            return $this->errorResponse('无法初始化 curl');
         }
 
         curl_setopt($curl, CURLOPT_POST, $postdata !== '');
@@ -42,15 +47,15 @@ class DiscuzToDeepseekClient
         curl_close($curl);
 
         if ($response === false) {
-            return $this->errorResponse($error ? $error : 'DeepSeek request failed', $errno, $httpCode);
+            return $this->errorResponse($error ? $error : 'DeepSeek 请求失败', $errno, $httpCode);
         }
 
         if ($response === '') {
-            return $this->errorResponse('DeepSeek returned an empty response', 0, $httpCode);
+            return $this->errorResponse('DeepSeek 返回了空响应', 0, $httpCode);
         }
 
         if ($httpCode >= 400) {
-            return $this->errorResponse('DeepSeek HTTP error: ' . $httpCode, 0, $httpCode, $response);
+            return $this->errorResponse('DeepSeek HTTP 错误：' . $httpCode, 0, $httpCode, $response);
         }
 
         return $response;
@@ -59,7 +64,7 @@ class DiscuzToDeepseekClient
     public function getTextDavinci($prompt, $rolename, $cache)
     {
         if (empty($cache['apikey'])) {
-            return $this->errorResponse('DeepSeek API key is empty');
+            return $this->errorResponse('DeepSeek 接口密钥为空');
         }
 
         $headers = array(

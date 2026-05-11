@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Discuz to Deepseek
+ * 开源插件 by hahaTT
+ */
+
 if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
     exit('Access Denied');
 }
@@ -17,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['promptsubmit'])) {
     $systemPrompt = isset($_POST['deepseek_system_prompt']) ? trim($_POST['deepseek_system_prompt']) : '';
     $userPrompt = isset($_POST['deepseek_user_prompt']) ? trim($_POST['deepseek_user_prompt']) : '';
 
-    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_system_prompt', $systemPrompt, 'DeepSeek system prompt');
-    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_user_prompt', $userPrompt, 'DeepSeek user prompt template');
+    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_system_prompt', $systemPrompt, 'DeepSeek 系统提示词');
+    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_user_prompt', $userPrompt, 'DeepSeek 用户提示词模板');
 
     if (function_exists('updatecache')) {
         updatecache('plugin');
@@ -31,16 +36,16 @@ $systemPrompt = discuzToDeepseekPromptFetchVar($pluginId, 'deepseek_system_promp
 $userPrompt = discuzToDeepseekPromptFetchVar($pluginId, 'deepseek_user_prompt');
 
 showformheader($formAction);
-showtableheader('Discuz to Deepseek Prompt');
+showtableheader('Discuz to Deepseek 提示词设置');
 
 showtablerow('', array('colspan="2"'), array(
     '<div style="color:#666;line-height:1.8;">' .
-    'System Prompt is sent as the system message. User Prompt Template is optional; when empty, the raw thread content is used. Available variables: <code>{content}</code> / <code>{text}</code> for post content, <code>{role}</code> for role prompt.' .
+    '系统提示词会作为系统消息发送给 DeepSeek。用户提示词模板可留空，留空时直接使用帖子内容。可用变量：<code>{content}</code> / <code>{text}</code> 表示帖子内容，<code>{role}</code> 表示角色提示词。' .
     '</div>'
 ));
 
-showsetting('System Prompt', 'deepseek_system_prompt', $systemPrompt, 'textarea');
-showsetting('User Prompt Template', 'deepseek_user_prompt', $userPrompt, 'textarea');
+showsetting('系统提示词', 'deepseek_system_prompt', $systemPrompt, 'textarea');
+showsetting('用户提示词模板', 'deepseek_user_prompt', $userPrompt, 'textarea');
 showsubmit('promptsubmit');
 showtablefooter();
 showformfooter();

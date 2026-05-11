@@ -1,21 +1,16 @@
 <?php
 
-/** *      应用名称: Discuz to Deepseek *      应用开发者: 凹凸曼
- *      开发者QQ: 3489214354
- *      更新日期: 202605111942
- *      授权域名: zwwx.club
- *      授权码: 2026051119cxxquXxUk1
- *      未经应用程序开发者/所有者的书面许可，不得进行反向工程、反向汇编、反向编译等，不得擅自复制、修改、链接、转载、汇编、发表、出版、发展与之有关的衍生产品、作品等
+/**
+ * Discuz to Deepseek
+ * 开源插件 by hahaTT
  */
 
-/** * */
-if (! defined('IN_DISCUZ')) {
-    exit('Acccess Denied');
+if (!defined('IN_DISCUZ')) {
+    exit('Access Denied');
 }
 
 class table_forum_postext extends table_forum_post
 {
-
     public function __construct()
     {
         $this->_table = 'forum_post';
@@ -23,15 +18,21 @@ class table_forum_postext extends table_forum_post
         parent::__construct();
     }
 
-    public function fetch_threadpost_by_tid_invisible_new($tid, $invisible = null) {
-        return DB::fetch_first('SELECT tid FROM %t WHERE tid=%d '.($invisible !== null ? ' AND '.DB::field('invisible', $invisible) : '').' limit 1',
-            array(self::get_tablename('tid:'.$tid), $tid));
+    public function fetch_threadpost_by_tid_invisible_new($tid, $invisible = null)
+    {
+        return DB::fetch_first(
+            'SELECT tid FROM %t WHERE tid=%d ' . ($invisible !== null ? ' AND ' . DB::field('invisible', $invisible) : '') . ' limit 1',
+            array(self::get_tablename('tid:' . $tid), $tid)
+        );
     }
-    
-    public function fetch_last_new($tid, $invisible = null) {
-        return DB::fetch_first('SELECT tid,first,attachment,fid,pid,message,subject,authorid,author,dateline FROM %t WHERE tid=%d  '.($invisible !== null ? ' AND '.DB::field('invisible', $invisible,'in') : '').' order by pid desc limit 1',
-            array(self::get_tablename('tid:'.$tid), $tid));
+
+    public function fetch_last_new($tid, $invisible = null)
+    {
+        return DB::fetch_first(
+            'SELECT tid,first,attachment,fid,pid,message,subject,authorid,author,dateline FROM %t WHERE tid=%d ' . ($invisible !== null ? ' AND ' . DB::field('invisible', $invisible, 'in') : '') . ' order by pid desc limit 1',
+            array(self::get_tablename('tid:' . $tid), $tid)
+        );
     }
 }
-    		  	  		  	  		     	  	 			    		   		     		       	   	 		    		   		     		       	   	 		    		   		     		       	   				    		   		     		       	   		      		   		     		       	   	 	    		   		     		       	 	        		   		     		       	 	        		   		     		       	    	 	    		   		     		       	   	       		   		     		       	   	       		   		     		       	    			    		   		     		       	 	   	    		   		     		       	  			      		   		     		       	  	  		    		   		     		       	   	 	     		   		     		       	  			 	    		   		     		       	 	        		 	      	  		  	  		     	
+
 ?>

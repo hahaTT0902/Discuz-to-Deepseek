@@ -1,11 +1,15 @@
 <?php
 
+/**
+ * Discuz to Deepseek
+ * 开源插件 by hahaTT
+ */
+
 if (!defined('IN_ADMINCP')) {
     exit('Access Denied');
 }
 
-// Keep the installer check side-effect free. Plugin checks must not edit or
-// remove files from unrelated plugins.
+// 安装检测保持无副作用，不能修改或删除其他插件的文件。
 return true;
 
 ?>
