@@ -113,6 +113,8 @@ function discuzToDeepseekInstallPluginInfo($pluginid)
 
 function discuzToDeepseekInstallHooks($pluginid)
 {
+    discuzToDeepseekInstallEnsurePluginHookTable();
+
     if (!discuzToDeepseekInstallTableExists('common_pluginhook')) {
         return;
     }
@@ -207,6 +209,35 @@ function discuzToDeepseekInstallTableColumns($table)
         }
     }
     return $columns;
+}
+
+function discuzToDeepseekInstallEnsurePluginHookTable()
+{
+    if (discuzToDeepseekInstallTableExists('common_pluginhook')) {
+        return;
+    }
+
+    $tableName = DB::table('common_pluginhook');
+    $sql = "CREATE TABLE IF NOT EXISTS {$tableName} (
+        hookid int(10) unsigned NOT NULL AUTO_INCREMENT,
+        pluginid smallint(6) unsigned NOT NULL DEFAULT '0',
+        available tinyint(1) NOT NULL DEFAULT '1',
+        displayorder smallint(6) unsigned NOT NULL DEFAULT '0',
+        hook varchar(40) NOT NULL DEFAULT '',
+        script varchar(64) NOT NULL DEFAULT '',
+        includefile varchar(64) NOT NULL DEFAULT '',
+        hookscript varchar(64) NOT NULL DEFAULT '',
+        class varchar(64) NOT NULL DEFAULT '',
+        method varchar(64) NOT NULL DEFAULT '',
+        type tinyint(1) NOT NULL DEFAULT '0',
+        hooktype tinyint(1) NOT NULL DEFAULT '0',
+        PRIMARY KEY (hookid),
+        KEY pluginid (pluginid,available,displayorder),
+        KEY hook (hook),
+        KEY classmethod (class,method)
+    ) ENGINE=MyISAM";
+
+    DB::query($sql, 'SILENT');
 }
 
 function discuzToDeepseekInstallFillRequiredColumns($columns, $data)

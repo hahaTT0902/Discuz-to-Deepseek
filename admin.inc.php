@@ -95,6 +95,8 @@ echo '<div class="cuspages right">' . $multipage . '</div>';
 
 function discuzToDeepseekEnsureHooks($pluginid)
 {
+    discuzToDeepseekAdminEnsurePluginHookTable();
+
     if (!discuzToDeepseekAdminTableExists('common_pluginhook')) {
         return array('changed' => false, 'message' => 'common_pluginhook_not_exists', 'columnsText' => '');
     }
@@ -206,6 +208,35 @@ function discuzToDeepseekAdminTableColumns($table)
         }
     }
     return $columns;
+}
+
+function discuzToDeepseekAdminEnsurePluginHookTable()
+{
+    if (discuzToDeepseekAdminTableExists('common_pluginhook')) {
+        return;
+    }
+
+    $tableName = DB::table('common_pluginhook');
+    $sql = "CREATE TABLE IF NOT EXISTS {$tableName} (
+        hookid int(10) unsigned NOT NULL AUTO_INCREMENT,
+        pluginid smallint(6) unsigned NOT NULL DEFAULT '0',
+        available tinyint(1) NOT NULL DEFAULT '1',
+        displayorder smallint(6) unsigned NOT NULL DEFAULT '0',
+        hook varchar(40) NOT NULL DEFAULT '',
+        script varchar(64) NOT NULL DEFAULT '',
+        includefile varchar(64) NOT NULL DEFAULT '',
+        hookscript varchar(64) NOT NULL DEFAULT '',
+        class varchar(64) NOT NULL DEFAULT '',
+        method varchar(64) NOT NULL DEFAULT '',
+        type tinyint(1) NOT NULL DEFAULT '0',
+        hooktype tinyint(1) NOT NULL DEFAULT '0',
+        PRIMARY KEY (hookid),
+        KEY pluginid (pluginid,available,displayorder),
+        KEY hook (hook),
+        KEY classmethod (class,method)
+    ) ENGINE=MyISAM";
+
+    DB::query($sql, 'SILENT');
 }
 
 function discuzToDeepseekAdminFillRequiredColumns($columns, $data)
