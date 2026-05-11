@@ -25,7 +25,7 @@ $come  = isset($_GET['come']) ? trim($_GET['come']) : '';
 // ── Scan mode: 轮询扫描最近新帖，绕开 Discuz Hook 机制 ─────────────────────
 // 触发方式：
 //   1) 后台管理点击 "立即扫描" 按钮 (formhash 校验)
-//   2) 服务器 crontab / 定时任务 调用 plugin.php?id=discuz_to_deepseek:discuz_to_deepseek&come=scan&token=...
+//   2) 服务器 crontab / 定时任务 调用 plugin.php?id=discuz_to_deepseek&come=scan&token=...
 if ($come === 'scan') {
     $authed = false;
     // 方式 A: 管理员 + formhash

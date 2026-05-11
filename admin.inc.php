@@ -169,7 +169,7 @@ $testlogurl = $baseurl . '&go=testlog&formhash=' . formhash();
 $cleanOrphanUrl = $baseurl . '&go=cleanorphan&formhash=' . formhash();
 $fixModulesUrl = $baseurl . '&go=fixmodules&formhash=' . formhash();
 $rebuildCacheUrl = $baseurl . '&go=rebuildcache&formhash=' . formhash();
-$scanUrl = 'plugin.php?id=discuz_to_deepseek:discuz_to_deepseek&come=scan&formhash=' . formhash();
+$scanUrl = 'plugin.php?id=discuz_to_deepseek&come=scan&formhash=' . formhash();
 
 // 生成 cron 共享 token，供站长配置系统级定时任务使用
 $cronAuthKey = isset($_G['config']['security']['authkey']) ? $_G['config']['security']['authkey'] : '';
@@ -181,7 +181,7 @@ if (!empty($_G['siteurl'])) {
     $scheme = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') ? 'https://' : 'http://';
     $siteRoot = $scheme . $_SERVER['HTTP_HOST'] . '/';
 }
-$cronUrl = $siteRoot . 'plugin.php?id=discuz_to_deepseek:discuz_to_deepseek&come=scan&token=' . $cronToken;
+$cronUrl = $siteRoot . 'plugin.php?id=discuz_to_deepseek&come=scan&token=' . $cronToken;
 $multipage = multi($num, $prepage, $page, $baseurl);
 $arr = $logTable->range($start, $prepage, 'addtime desc');
 
