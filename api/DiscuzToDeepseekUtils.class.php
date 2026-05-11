@@ -226,8 +226,8 @@ class DiscuzToDeepseekUtils
         curl_setopt($curl, CURLOPT_HTTPGET, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 2);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 15);
         curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
         curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
