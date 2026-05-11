@@ -12,9 +12,13 @@ if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
 $logTable = C::t('#discuz_to_deepseek#discuz_to_deepseek_error');
 $logTable->ensureTable();
 
-$currentPluginId = isset($pluginid) ? intval($pluginid) : 0;
+$currentPluginId = discuzToDeepseekResolvePluginId(isset($pluginid) ? $pluginid : 0);
 if ($currentPluginId > 0) {
-    discuzToDeepseekEnsureHooks($currentPluginId);
+    $hooksChanged = discuzToDeepseekEnsureHooks($currentPluginId);
+    if ($hooksChanged && function_exists('updatecache')) {
+        updatecache('plugin');
+        updatecache('setting');
+    }
 }
 
 if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'del' && $_GET['formhash'] == FORMHASH) {
@@ -22,6 +26,14 @@ if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'del' && $_GET['form
     if ($delid > 0) {
         $logTable->delete($delid);
     }
+}
+
+if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'testlog' && $_GET['formhash'] == FORMHASH) {
+    $logTable->insert(array(
+        'tid' => 0,
+        'message' => 'admin_test_log:' . TIMESTAMP,
+        'addtime' => TIMESTAMP,
+    ));
 }
 
 showtableheader();
@@ -32,10 +44,18 @@ $start = ($page - 1) * $prepage;
 $num = $logTable->count();
 $baseurl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($pluginid) . '&identifier=discuz_to_deepseek&pmod=admin';
 $prompturl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($pluginid) . '&identifier=discuz_to_deepseek&pmod=adminprompt';
+$testlogurl = $baseurl . '&go=testlog&formhash=' . formhash();
 $multipage = multi($num, $prepage, $page, $baseurl);
 $arr = $logTable->range($start, $prepage, 'addtime desc');
 
-showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">提示词设置</a>'));
+$hookCount = 0;
+if ($currentPluginId > 0 && discuzToDeepseekAdminTableExists('common_pluginhook')) {
+    $row = DB::fetch_first('SELECT COUNT(*) AS cnt FROM %t WHERE pluginid=%d AND hookscript=%s', array('common_pluginhook', $currentPluginId, 'discuz_to_deepseek'));
+    $hookCount = $row ? intval($row['cnt']) : 0;
+}
+
+showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">提示词设置</a> &nbsp; <a href="' . $testlogurl . '">写入测试日志</a>'));
+showtablerow('', array('colspan="5"'), array('<div style="color:#666;line-height:1.8;">当前插件ID：' . intval($currentPluginId) . '，已注册Hook数量：' . intval($hookCount) . '。如果发新主题仍无日志，先点击“写入测试日志”确认日志写入链路正常。</div>'));
 
 showsubtitle(array(
     'ID',
@@ -68,8 +88,10 @@ echo '<div class="cuspages right">' . $multipage . '</div>';
 function discuzToDeepseekEnsureHooks($pluginid)
 {
     if (!discuzToDeepseekAdminTableExists('common_pluginhook')) {
-        return;
+        return false;
     }
+
+    $changed = false;
 
     $hooks = array(
         array('hook' => 'viewthread_bottom',     'class' => 'plugin_discuz_to_deepseek_forum',        'method' => 'viewthread_bottom_output'),
@@ -109,8 +131,22 @@ function discuzToDeepseekEnsureHooks($pluginid)
             DB::update('common_pluginhook', $data, DB::field('hookid', $exists['hookid']));
         } else {
             DB::insert('common_pluginhook', $data);
+            $changed = true;
         }
     }
+
+    return $changed;
+}
+
+function discuzToDeepseekResolvePluginId($pluginid)
+{
+    $pluginid = intval($pluginid);
+    if ($pluginid > 0) {
+        return $pluginid;
+    }
+
+    $plugin = DB::fetch_first('SELECT pluginid FROM %t WHERE identifier=%s', array('common_plugin', 'discuz_to_deepseek'));
+    return $plugin ? intval($plugin['pluginid']) : 0;
 }
 
 function discuzToDeepseekAdminTableExists($table)
