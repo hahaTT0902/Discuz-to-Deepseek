@@ -120,7 +120,9 @@ class DiscuzToDeepseekUtils
             return;
         }
 
-        C::t('#discuz_to_deepseek#discuz_to_deepseek_error')->insert(array(
+        $logTable = C::t('#discuz_to_deepseek#discuz_to_deepseek_error');
+        $logTable->ensureTable();
+        $logTable->insert(array(
             'tid' => intval($tid),
             'message' => (string)$message,
             'addtime' => TIMESTAMP

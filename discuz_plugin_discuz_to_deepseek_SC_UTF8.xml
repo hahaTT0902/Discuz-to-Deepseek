@@ -1,399 +1,76 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="iso-8859-1"?>
 <root>
-    <item id="Title"><![CDATA[Discuz! Plugin]]></item>
-    <item id="Version"><![CDATA[X3,X3.1,X3.2,X3.3,X3.4,X3.5,X5]]></item>
-    <item id="Time"><![CDATA[2026-05-11 00:00]]></item>
-    <item id="From"><![CDATA[Discuz to Deepseek]]></item>
-    <item id="Data">
-        <item id="plugin">
-            <item id="available"><![CDATA[1]]></item>
-            <item id="adminid"><![CDATA[1]]></item>
-            <item id="name"><![CDATA[Discuz to Deepseek]]></item>
-            <item id="identifier"><![CDATA[discuz_to_deepseek]]></item>
-            <item id="description"><![CDATA[Use DeepSeek to generate automatic Discuz forum replies.]]></item>
-            <item id="datatables"><![CDATA[plugin_discuz_to_deepseek_err]]></item>
-            <item id="directory"><![CDATA[discuz_to_deepseek/]]></item>
-            <item id="copyright"><![CDATA[Discuz to Deepseek]]></item>
-            <item id="version"><![CDATA[1.0.0]]></item>
-            <item id="__modules">
-                <item id="0">
-                    <item id="name"><![CDATA[admin]]></item>
-                    <item id="menu"><![CDATA[Run Logs]]></item>
-                    <item id="url"><![CDATA[]]></item>
-                    <item id="type"><![CDATA[3]]></item>
-                    <item id="adminid"><![CDATA[1]]></item>
-                    <item id="displayorder"><![CDATA[1]]></item>
-                    <item id="navtitle"><![CDATA[]]></item>
-                    <item id="navicon"><![CDATA[]]></item>
-                    <item id="navsubname"><![CDATA[]]></item>
-                    <item id="navsuburl"><![CDATA[]]></item>
-                </item>
-                <item id="1">
-                    <item id="name"><![CDATA[adminprompt]]></item>
-                    <item id="menu"><![CDATA[Prompt Settings]]></item>
-                    <item id="url"><![CDATA[]]></item>
-                    <item id="type"><![CDATA[3]]></item>
-                    <item id="adminid"><![CDATA[1]]></item>
-                    <item id="displayorder"><![CDATA[2]]></item>
-                    <item id="navtitle"><![CDATA[]]></item>
-                    <item id="navicon"><![CDATA[]]></item>
-                    <item id="navsubname"><![CDATA[]]></item>
-                    <item id="navsuburl"><![CDATA[]]></item>
-                </item>
-                <item id="2">
-                    <item id="name"><![CDATA[adminhelp]]></item>
-                    <item id="menu"><![CDATA[Help]]></item>
-                    <item id="url"><![CDATA[]]></item>
-                    <item id="type"><![CDATA[3]]></item>
-                    <item id="adminid"><![CDATA[1]]></item>
-                    <item id="displayorder"><![CDATA[3]]></item>
-                    <item id="navtitle"><![CDATA[]]></item>
-                    <item id="navicon"><![CDATA[]]></item>
-                    <item id="navsubname"><![CDATA[]]></item>
-                    <item id="navsuburl"><![CDATA[]]></item>
-                </item>
-                <item id="3">
-                    <item id="name"><![CDATA[nav]]></item>
-                    <item id="menu"><![CDATA[Discuz to Deepseek]]></item>
-                    <item id="url"><![CDATA[]]></item>
-                    <item id="type"><![CDATA[2]]></item>
-                    <item id="adminid"><![CDATA[0]]></item>
-                    <item id="displayorder"><![CDATA[10]]></item>
-                    <item id="navtitle"><![CDATA[Discuz to Deepseek]]></item>
-                    <item id="navicon"><![CDATA[]]></item>
-                    <item id="navsubname"><![CDATA[]]></item>
-                    <item id="navsuburl"><![CDATA[]]></item>
-                </item>
-            </item>
-            <item id="__vars">
-                <item id="0">
-                    <item id="displayorder"><![CDATA[1]]></item>
-                    <item id="title"><![CDATA[Enable Auto Reply]]></item>
-                    <item id="description"><![CDATA[Enable DeepSeek automatic replies.]]></item>
-                    <item id="variable"><![CDATA[openai]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="1">
-                    <item id="displayorder"><![CDATA[2]]></item>
-                    <item id="title"><![CDATA[DeepSeek API Key]]></item>
-                    <item id="description"><![CDATA[Bearer token for DeepSeek API.]]></item>
-                    <item id="variable"><![CDATA[apikey]]></item>
-                    <item id="type"><![CDATA[text]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="2">
-                    <item id="displayorder"><![CDATA[3]]></item>
-                    <item id="title"><![CDATA[Posting User UIDs]]></item>
-                    <item id="description"><![CDATA[Comma-separated user IDs used to publish AI replies, for example: 2,3,8.]]></item>
-                    <item id="variable"><![CDATA[users]]></item>
-                    <item id="type"><![CDATA[text]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="3">
-                    <item id="displayorder"><![CDATA[4]]></item>
-                    <item id="title"><![CDATA[Allowed User Groups]]></item>
-                    <item id="description"><![CDATA[User groups that may trigger auto replies.]]></item>
-                    <item id="variable"><![CDATA[groups]]></item>
-                    <item id="type"><![CDATA[group]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="4">
-                    <item id="displayorder"><![CDATA[5]]></item>
-                    <item id="title"><![CDATA[Allowed Forums]]></item>
-                    <item id="description"><![CDATA[Forums where auto replies are enabled.]]></item>
-                    <item id="variable"><![CDATA[forums]]></item>
-                    <item id="type"><![CDATA[forum]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="5">
-                    <item id="displayorder"><![CDATA[6]]></item>
-                    <item id="title"><![CDATA[Model]]></item>
-                    <item id="description"><![CDATA[DeepSeek model mode.]]></item>
-                    <item id="variable"><![CDATA[deepseekllm]]></item>
-                    <item id="type"><![CDATA[select]]></item>
-                    <item id="value"><![CDATA[1]]></item>
-                    <item id="extra"><![CDATA[1=deepseek-v4-flash
-2=deepseek-v4-pro]]></item>
-                </item>
-                <item id="6">
-                    <item id="displayorder"><![CDATA[7]]></item>
-                    <item id="title"><![CDATA[System Prompt]]></item>
-                    <item id="description"><![CDATA[Optional system prompt sent to DeepSeek.]]></item>
-                    <item id="variable"><![CDATA[deepseek_system_prompt]]></item>
-                    <item id="type"><![CDATA[textarea]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="7">
-                    <item id="displayorder"><![CDATA[8]]></item>
-                    <item id="title"><![CDATA[User Prompt Template]]></item>
-                    <item id="description"><![CDATA[Optional template. Variables: {content}, {text}, {role}.]]></item>
-                    <item id="variable"><![CDATA[deepseek_user_prompt]]></item>
-                    <item id="type"><![CDATA[textarea]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="8">
-                    <item id="displayorder"><![CDATA[9]]></item>
-                    <item id="title"><![CDATA[Auto Reply Latest Post]]></item>
-                    <item id="description"><![CDATA[Reply to the latest visible post instead of only first post.]]></item>
-                    <item id="variable"><![CDATA[openautoreply]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="9">
-                    <item id="displayorder"><![CDATA[10]]></item>
-                    <item id="title"><![CDATA[Quote Source Post]]></item>
-                    <item id="description"><![CDATA[Add quote block before generated reply.]]></item>
-                    <item id="variable"><![CDATA[openquote]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="10">
-                    <item id="displayorder"><![CDATA[11]]></item>
-                    <item id="title"><![CDATA[Ignore Threads With Attachments]]></item>
-                    <item id="description"><![CDATA[Do not auto reply when a thread or source post has attachments.]]></item>
-                    <item id="variable"><![CDATA[openattach]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="11">
-                    <item id="displayorder"><![CDATA[12]]></item>
-                    <item id="title"><![CDATA[Debug Logs]]></item>
-                    <item id="description"><![CDATA[Write DeepSeek responses and errors to plugin logs.]]></item>
-                    <item id="variable"><![CDATA[opendebug]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[1]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="12">
-                    <item id="displayorder"><![CDATA[13]]></item>
-                    <item id="title"><![CDATA[Render After Page Load]]></item>
-                    <item id="description"><![CDATA[Delay script injection until the page load event.]]></item>
-                    <item id="variable"><![CDATA[openonload]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[1]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="13">
-                    <item id="displayorder"><![CDATA[14]]></item>
-                    <item id="title"><![CDATA[Enable Group Threads]]></item>
-                    <item id="description"><![CDATA[Enable automatic replies for Discuz group threads.]]></item>
-                    <item id="variable"><![CDATA[opengroup]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="14">
-                    <item id="displayorder"><![CDATA[15]]></item>
-                    <item id="title"><![CDATA[Enable Portal Articles]]></item>
-                    <item id="description"><![CDATA[Enable automatic replies for portal article pages.]]></item>
-                    <item id="variable"><![CDATA[openarticle]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="15">
-                    <item id="displayorder"><![CDATA[16]]></item>
-                    <item id="title"><![CDATA[Maximum Replies Per Thread]]></item>
-                    <item id="description"><![CDATA[0 means unlimited.]]></item>
-                    <item id="variable"><![CDATA[limitnums]]></item>
-                    <item id="type"><![CDATA[text]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="16">
-                    <item id="displayorder"><![CDATA[17]]></item>
-                    <item id="title"><![CDATA[Source Content]]></item>
-                    <item id="description"><![CDATA[Choose the content sent to DeepSeek for the first post.]]></item>
-                    <item id="variable"><![CDATA[selectfirst]]></item>
-                    <item id="type"><![CDATA[select]]></item>
-                    <item id="value"><![CDATA[1]]></item>
-                    <item id="extra"><![CDATA[1=Subject only
-2=Subject and content
-3=Content only]]></item>
-                </item>
-                <item id="17">
-                    <item id="displayorder"><![CDATA[18]]></item>
-                    <item id="title"><![CDATA[Moderate AI Replies]]></item>
-                    <item id="description"><![CDATA[Put AI replies into moderation unless the trigger group is exempt.]]></item>
-                    <item id="variable"><![CDATA[openinvisible]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="18">
-                    <item id="displayorder"><![CDATA[19]]></item>
-                    <item id="title"><![CDATA[Moderation Exempt Groups]]></item>
-                    <item id="description"><![CDATA[Groups that can publish AI replies directly when moderation is enabled.]]></item>
-                    <item id="variable"><![CDATA[mgroups]]></item>
-                    <item id="type"><![CDATA[group]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="19">
-                    <item id="displayorder"><![CDATA[20]]></item>
-                    <item id="title"><![CDATA[Append Footer]]></item>
-                    <item id="description"><![CDATA[Append a footer text after generated replies.]]></item>
-                    <item id="variable"><![CDATA[openfrom]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="20">
-                    <item id="displayorder"><![CDATA[21]]></item>
-                    <item id="title"><![CDATA[Footer Text]]></item>
-                    <item id="description"><![CDATA[Footer text appended when Append Footer is enabled.]]></item>
-                    <item id="variable"><![CDATA[from]]></item>
-                    <item id="type"><![CDATA[text]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="21">
-                    <item id="displayorder"><![CDATA[22]]></item>
-                    <item id="title"><![CDATA[Enable Type Limit Component]]></item>
-                    <item id="description"><![CDATA[Optional extension hook. Requires components/type.php.]]></item>
-                    <item id="variable"><![CDATA[openlimittype]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="22">
-                    <item id="displayorder"><![CDATA[23]]></item>
-                    <item id="title"><![CDATA[Enable Thread Time Limit]]></item>
-                    <item id="description"><![CDATA[Only reply to threads newer than the configured time.]]></item>
-                    <item id="variable"><![CDATA[opentime]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="23">
-                    <item id="displayorder"><![CDATA[24]]></item>
-                    <item id="title"><![CDATA[Thread Time Limit]]></item>
-                    <item id="description"><![CDATA[Example: 2026-01-01 00:00:00. Used only when Thread Time Limit is enabled.]]></item>
-                    <item id="variable"><![CDATA[limittime]]></item>
-                    <item id="type"><![CDATA[text]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="24">
-                    <item id="displayorder"><![CDATA[25]]></item>
-                    <item id="title"><![CDATA[Enable Reply Delay]]></item>
-                    <item id="description"><![CDATA[Wait before replying after the latest thread activity.]]></item>
-                    <item id="variable"><![CDATA[opendelayreply]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="25">
-                    <item id="displayorder"><![CDATA[26]]></item>
-                    <item id="title"><![CDATA[Reply Delay Seconds]]></item>
-                    <item id="description"><![CDATA[Seconds or random range such as 60~300.]]></item>
-                    <item id="variable"><![CDATA[delaytime]]></item>
-                    <item id="type"><![CDATA[text]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="26">
-                    <item id="displayorder"><![CDATA[27]]></item>
-                    <item id="title"><![CDATA[Enable First VIP Component]]></item>
-                    <item id="description"><![CDATA[Optional extension hook. Requires components/firstvip.php.]]></item>
-                    <item id="variable"><![CDATA[openfirstvip]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="27">
-                    <item id="displayorder"><![CDATA[28]]></item>
-                    <item id="title"><![CDATA[Enable Role Component]]></item>
-                    <item id="description"><![CDATA[Optional extension hook. Requires components/role.php.]]></item>
-                    <item id="variable"><![CDATA[openrole]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="28">
-                    <item id="displayorder"><![CDATA[29]]></item>
-                    <item id="title"><![CDATA[Reply Style Limit]]></item>
-                    <item id="description"><![CDATA[Append a built-in style instruction to the prompt.]]></item>
-                    <item id="variable"><![CDATA[openlimit]]></item>
-                    <item id="type"><![CDATA[select]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[0=None
-1=Concise
-2=Natural
-3=Friendly forum style]]></item>
-                </item>
-                <item id="29">
-                    <item id="displayorder"><![CDATA[30]]></item>
-                    <item id="title"><![CDATA[Enable Limit Trigger Component]]></item>
-                    <item id="description"><![CDATA[Optional extension hook. Requires components/limittriggering.php.]]></item>
-                    <item id="variable"><![CDATA[openlimittriggering]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-                <item id="30">
-                    <item id="displayorder"><![CDATA[31]]></item>
-                    <item id="title"><![CDATA[AI Platform]]></item>
-                    <item id="description"><![CDATA[DeepSeek is the built-in platform. Aliyun requires optional component support.]]></item>
-                    <item id="variable"><![CDATA[selectplatform]]></item>
-                    <item id="type"><![CDATA[select]]></item>
-                    <item id="value"><![CDATA[1]]></item>
-                    <item id="extra"><![CDATA[1=DeepSeek
-2=Aliyun component]]></item>
-                </item>
-                <item id="31">
-                    <item id="displayorder"><![CDATA[32]]></item>
-                    <item id="title"><![CDATA[Aliyun API Key]]></item>
-                    <item id="description"><![CDATA[Used only by optional Aliyun component.]]></item>
-                    <item id="variable"><![CDATA[aliyunapikey]]></item>
-                    <item id="type"><![CDATA[text]]></item>
-                    <item id="value"><![CDATA[]]></item>
-                    <item id="extra"><![CDATA[]]></item>
-                </item>
-                <item id="32">
-                    <item id="displayorder"><![CDATA[33]]></item>
-                    <item id="title"><![CDATA[Enable Aliyun Component]]></item>
-                    <item id="description"><![CDATA[Optional extension hook. Requires components/aliyun.php.]]></item>
-                    <item id="variable"><![CDATA[openaliyunds]]></item>
-                    <item id="type"><![CDATA[radio]]></item>
-                    <item id="value"><![CDATA[0]]></item>
-                    <item id="extra"><![CDATA[1=Yes
-0=No]]></item>
-                </item>
-            </item>
+  <item id="Title"><![CDATA[Discuz! Plugin]]></item>
+  <item id="Version"><![CDATA[X3,X3.1,X3.2,X3.3,X3.4,X3.5,X5]]></item>
+  <item id="Time"><![CDATA[2026-05-11 00:00]]></item>
+  <item id="From"><![CDATA[Discuz to Deepseek]]></item>
+  <item id="Data">
+    <item id="plugin">
+      <item id="available"><![CDATA[1]]></item>
+      <item id="adminid"><![CDATA[1]]></item>
+      <item id="name"><![CDATA[Discuz to Deepseek]]></item>
+      <item id="identifier"><![CDATA[discuz_to_deepseek]]></item>
+      <item id="description"><![CDATA[Use DeepSeek to generate automatic Discuz forum replies.]]></item>
+      <item id="datatables"><![CDATA[plugin_discuz_to_deepseek_err]]></item>
+      <item id="directory"><![CDATA[discuz_to_deepseek/]]></item>
+      <item id="copyright"><![CDATA[Discuz to Deepseek]]></item>
+      <item id="version"><![CDATA[1.0.0]]></item>
+      <item id="__modules">
+        <item id="0">
+          <item id="name"><![CDATA[admin]]></item>
+          <item id="menu"><![CDATA[Run Logs]]></item>
+          <item id="url"><![CDATA[]]></item>
+          <item id="type"><![CDATA[3]]></item>
+          <item id="adminid"><![CDATA[1]]></item>
+          <item id="displayorder"><![CDATA[1]]></item>
+          <item id="navtitle"><![CDATA[]]></item>
+          <item id="navicon"><![CDATA[]]></item>
+          <item id="navsubname"><![CDATA[]]></item>
+          <item id="navsuburl"><![CDATA[]]></item>
         </item>
-        <item id="version"><![CDATA[X3,X3.1,X3.2,X3.3,X3.4,X3.5,X5]]></item>
-        <item id="license"><![CDATA[MIT]]></item>
-        <item id="intro"><![CDATA[Discuz to Deepseek adds DeepSeek-powered automatic replies to Discuz forum threads.]]></item>
-        <item id="installfile"><![CDATA[install.php]]></item>
-        <item id="uninstallfile"><![CDATA[uninstall.php]]></item>
-        <item id="upgradefile"><![CDATA[]]></item>
+        <item id="1">
+          <item id="name"><![CDATA[adminprompt]]></item>
+          <item id="menu"><![CDATA[Prompt Settings]]></item>
+          <item id="url"><![CDATA[]]></item>
+          <item id="type"><![CDATA[3]]></item>
+          <item id="adminid"><![CDATA[1]]></item>
+          <item id="displayorder"><![CDATA[2]]></item>
+          <item id="navtitle"><![CDATA[]]></item>
+          <item id="navicon"><![CDATA[]]></item>
+          <item id="navsubname"><![CDATA[]]></item>
+          <item id="navsuburl"><![CDATA[]]></item>
+        </item>
+        <item id="2">
+          <item id="name"><![CDATA[adminhelp]]></item>
+          <item id="menu"><![CDATA[Help]]></item>
+          <item id="url"><![CDATA[]]></item>
+          <item id="type"><![CDATA[3]]></item>
+          <item id="adminid"><![CDATA[1]]></item>
+          <item id="displayorder"><![CDATA[3]]></item>
+          <item id="navtitle"><![CDATA[]]></item>
+          <item id="navicon"><![CDATA[]]></item>
+          <item id="navsubname"><![CDATA[]]></item>
+          <item id="navsuburl"><![CDATA[]]></item>
+        </item>
+        <item id="3">
+          <item id="name"><![CDATA[nav]]></item>
+          <item id="menu"><![CDATA[Discuz to Deepseek]]></item>
+          <item id="url"><![CDATA[]]></item>
+          <item id="type"><![CDATA[2]]></item>
+          <item id="adminid"><![CDATA[0]]></item>
+          <item id="displayorder"><![CDATA[10]]></item>
+          <item id="navtitle"><![CDATA[Discuz to Deepseek]]></item>
+          <item id="navicon"><![CDATA[]]></item>
+          <item id="navsubname"><![CDATA[]]></item>
+          <item id="navsuburl"><![CDATA[]]></item>
+        </item>
+      </item>
     </item>
+    <item id="version"><![CDATA[X3,X3.1,X3.2,X3.3,X3.4,X3.5,X5]]></item>
+    <item id="license"><![CDATA[MIT]]></item>
+    <item id="intro"><![CDATA[Discuz to Deepseek adds DeepSeek-powered automatic replies to Discuz forum threads.]]></item>
+    <item id="installfile"><![CDATA[install.php]]></item>
+    <item id="uninstallfile"><![CDATA[uninstall.php]]></item>
+    <item id="upgradefile"><![CDATA[]]></item>
+  </item>
 </root>

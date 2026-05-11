@@ -4,10 +4,13 @@ if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
     exit('Access Denied');
 }
 
+$logTable = C::t('#discuz_to_deepseek#discuz_to_deepseek_error');
+$logTable->ensureTable();
+
 if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'del' && $_GET['formhash'] == FORMHASH) {
     $delid = intval($_GET['delid']);
     if ($delid > 0) {
-        C::t('#discuz_to_deepseek#discuz_to_deepseek_error')->delete($delid);
+        $logTable->delete($delid);
     }
 }
 
@@ -16,13 +19,13 @@ showtableheader();
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $prepage = 20;
 $start = ($page - 1) * $prepage;
-$num = C::t('#discuz_to_deepseek#discuz_to_deepseek_error')->count();
+$num = $logTable->count();
 $baseurl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($pluginid) . '&identifier=discuz_to_deepseek&pmod=admin';
 $prompturl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($pluginid) . '&identifier=discuz_to_deepseek&pmod=adminprompt';
 $multipage = multi($num, $prepage, $page, $baseurl);
-$arr = C::t('#discuz_to_deepseek#discuz_to_deepseek_error')->range($start, $prepage, 'addtime desc');
+$arr = $logTable->range($start, $prepage, 'addtime desc');
 
-showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">Prompt 设置</a>'));
+showtablerow('', array('colspan="5"'), array('<strong>Discuz to Deepseek</strong> &nbsp; <a href="' . $prompturl . '">Prompt Settings</a>'));
 
 showsubtitle(array(
     'ID',
