@@ -26,6 +26,8 @@ runquery($sql);
 $plugin = DB::fetch_first('SELECT pluginid FROM %t WHERE identifier=%s', array('common_plugin', 'discuz_to_deepseek'));
 if ($plugin) {
     $pluginid = intval($plugin['pluginid']);
+    discuzToDeepseekInstallPluginInfo($pluginid);
+
     foreach (discuzToDeepseekInstallVars() as $var) {
         $exists = DB::fetch_first(
             'SELECT pluginvarid FROM %t WHERE pluginid=%d AND variable=%s',
@@ -57,9 +59,59 @@ if ($plugin) {
 
 $finish = true;
 
+function discuzToDeepseekInstallText($text)
+{
+    return defined('CHARSET') && strtolower(CHARSET) == 'gbk' ? diconv($text, 'utf-8', 'gbk') : $text;
+}
+
+function discuzToDeepseekInstallPluginInfo($pluginid)
+{
+    $modules = array(
+        array('name' => 'admin', 'menu' => discuzToDeepseekInstallText('运行日志'), 'navtitle' => ''),
+        array('name' => 'adminprompt', 'menu' => discuzToDeepseekInstallText('提示词设置'), 'navtitle' => ''),
+        array('name' => 'adminhelp', 'menu' => discuzToDeepseekInstallText('帮助'), 'navtitle' => ''),
+        array('name' => 'nav', 'menu' => 'Discuz to Deepseek', 'navtitle' => 'Discuz to Deepseek'),
+    );
+
+    $plugin = DB::fetch_first('SELECT modules FROM %t WHERE pluginid=%d', array('common_plugin', $pluginid));
+    if ($plugin && !empty($plugin['modules'])) {
+        $storedModules = dunserialize($plugin['modules']);
+        if (is_array($storedModules)) {
+            foreach ($storedModules as $key => $module) {
+                if (!is_array($module) || empty($module['name'])) {
+                    continue;
+                }
+
+                foreach ($modules as $newModule) {
+                    if ($newModule['name'] == $module['name']) {
+                        $storedModules[$key]['menu'] = $newModule['menu'];
+                        if (isset($storedModules[$key]['navtitle'])) {
+                            $storedModules[$key]['navtitle'] = $newModule['navtitle'];
+                        }
+                    }
+                }
+            }
+
+            DB::update('common_plugin', array(
+                'name' => 'Discuz to Deepseek',
+                'description' => discuzToDeepseekInstallText('调用 DeepSeek 为 Discuz 帖子生成自动回复。开源插件 by hahaTT。'),
+                'copyright' => discuzToDeepseekInstallText('开源插件 by hahaTT'),
+                'modules' => serialize($storedModules),
+            ), DB::field('pluginid', $pluginid));
+        }
+    }
+
+    foreach ($modules as $module) {
+        DB::update('common_plugin_module', array(
+            'menu' => $module['menu'],
+            'navtitle' => $module['navtitle'],
+        ), DB::field('pluginid', $pluginid) . ' AND ' . DB::field('name', $module['name']), true);
+    }
+}
+
 function discuzToDeepseekInstallVars()
 {
-    return array(
+    $vars = array(
         array('displayorder' => 1, 'title' => '启用自动回帖', 'description' => '开启后使用 DeepSeek 自动生成回帖。', 'variable' => 'openai', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
         array('displayorder' => 2, 'title' => 'DeepSeek 接口密钥', 'description' => 'DeepSeek 接口密钥。', 'variable' => 'apikey', 'type' => 'text', 'value' => '', 'extra' => ''),
         array('displayorder' => 3, 'title' => '发帖用户 UID', 'description' => '用于发布 AI 回复的用户 UID，多个用英文逗号分隔，例如：2,3,8。', 'variable' => 'users', 'type' => 'text', 'value' => '', 'extra' => ''),
@@ -94,6 +146,15 @@ function discuzToDeepseekInstallVars()
         array('displayorder' => 32, 'title' => '阿里云接口密钥', 'description' => '仅可选阿里云组件使用。', 'variable' => 'aliyunapikey', 'type' => 'text', 'value' => '', 'extra' => ''),
         array('displayorder' => 33, 'title' => '启用阿里云组件', 'description' => '可选扩展，需要 components/aliyun.php。', 'variable' => 'openaliyunds', 'type' => 'radio', 'value' => '0', 'extra' => "1=是\n0=否"),
     );
+
+    foreach ($vars as $key => $var) {
+        $vars[$key]['title'] = discuzToDeepseekInstallText($var['title']);
+        $vars[$key]['description'] = discuzToDeepseekInstallText($var['description']);
+        $vars[$key]['value'] = discuzToDeepseekInstallText($var['value']);
+        $vars[$key]['extra'] = discuzToDeepseekInstallText($var['extra']);
+    }
+
+    return $vars;
 }
 
 ?>
