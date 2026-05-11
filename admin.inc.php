@@ -130,6 +130,33 @@ if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'fixmodules' && $_GE
     ));
 }
 
+if (isset($_GET['go'], $_GET['formhash']) && $_GET['go'] == 'rebuildcache' && $_GET['formhash'] == FORMHASH) {
+    $msg = array();
+    // 删除磁盘 cache 文件强制重建
+    $cacheDir = DISCUZ_ROOT . './data/cache/';
+    foreach (array('cache_plugin.php', 'cache_setting.php', 'cache_hookscript.php', 'cache_pluginlanguage_system.php', 'cache_pluginlanguage_script.php', 'cache_pluginlanguage_template.php') as $cacheFile) {
+        $full = $cacheDir . $cacheFile;
+        if (file_exists($full)) {
+            @unlink($full);
+            $msg[] = 'unlink:' . $cacheFile;
+        }
+    }
+    if (function_exists('updatecache')) {
+        // updatecache 不传参重建所有
+        updatecache();
+        $msg[] = 'updatecache_all';
+    }
+    if (function_exists('loadcache')) {
+        loadcache(array('plugin', 'setting', 'hookscript'), true);
+        $msg[] = 'reload';
+    }
+    $logTable->insert(array(
+        'tid' => 0,
+        'message' => 'rebuild_cache:' . implode(',', $msg),
+        'addtime' => TIMESTAMP,
+    ));
+}
+
 showtableheader();
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -141,6 +168,7 @@ $prompturl = ADMINSCRIPT . '?action=plugins&operation=config&do=' . intval($plug
 $testlogurl = $baseurl . '&go=testlog&formhash=' . formhash();
 $cleanOrphanUrl = $baseurl . '&go=cleanorphan&formhash=' . formhash();
 $fixModulesUrl = $baseurl . '&go=fixmodules&formhash=' . formhash();
+$rebuildCacheUrl = $baseurl . '&go=rebuildcache&formhash=' . formhash();
 $multipage = multi($num, $prepage, $page, $baseurl);
 $arr = $logTable->range($start, $prepage, 'addtime desc');
 
@@ -177,6 +205,7 @@ showtablerow('', array('colspan="5"'), array(
     . '<a href="' . $prompturl . '">提示词设置</a> &nbsp; '
     . '<a href="' . $testlogurl . '">写入测试日志</a> &nbsp; '
     . '<a href="' . $fixModulesUrl . '" style="color:#c00;font-weight:bold;">⚙ 修复 Hook 注册</a> &nbsp; '
+    . '<a href="' . $rebuildCacheUrl . '" style="color:#c00;font-weight:bold;">🔄 强制重建缓存</a> &nbsp; '
     . '<a href="' . $cleanOrphanUrl . '">清理孤儿配置</a>'
 ));
 showtablerow('', array('colspan="5"'), array(
