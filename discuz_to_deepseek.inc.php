@@ -327,10 +327,31 @@ function discuzToDeepseekTrustedRequest($cache, $id, $come)
             return false;
         }
         $expected = DiscuzToDeepseekUtils::internalToken($id, $come);
-        return function_exists('hash_equals') ? hash_equals($expected, $token) : $expected === $token;
+        return discuzToDeepseekHashEquals($expected, $token);
     }
 
     return isset($_GET['formhash']) && $_GET['formhash'] == FORMHASH;
+}
+
+function discuzToDeepseekHashEquals($knownString, $userString)
+{
+    if (function_exists('hash_equals')) {
+        return hash_equals($knownString, $userString);
+    }
+
+    $knownString = (string)$knownString;
+    $userString = (string)$userString;
+    $knownLength = strlen($knownString);
+    $userLength = strlen($userString);
+    if ($knownLength !== $userLength) {
+        return false;
+    }
+
+    $result = 0;
+    for ($i = 0; $i < $knownLength; $i++) {
+        $result |= ord($knownString[$i]) ^ ord($userString[$i]);
+    }
+    return $result === 0;
 }
 
 function selectInput($cache, $post)
