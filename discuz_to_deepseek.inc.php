@@ -199,9 +199,8 @@ if (!empty($cache['openfirstvip'])) {
         exit();
     }
 
-    $post   = C::t('forum_post')->fetch_threadpost_by_tid_invisible($tid, 0);
-    $thread = C::t('forum_thread')->fetch($tid, 0);
-    if (!$post || !$thread || $thread['replies'] > 0) {
+    $post = C::t('#discuz_to_deepseek#forum_postext')->fetch_last_new($tid, array(0));
+    if (!$post || !$post['first']) {
         exit();
     }
 
