@@ -240,10 +240,10 @@ class DiscuzToDeepseekUtils
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
         curl_setopt($curl, CURLOPT_TIMEOUT, 1);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Connection: close'));
-        $ok = curl_exec($curl) !== false;
+        $requestSucceeded = curl_exec($curl) !== false;
         curl_close($curl);
 
-        return $ok;
+        return $requestSucceeded;
     }
 
     /**

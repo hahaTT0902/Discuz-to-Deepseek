@@ -330,7 +330,7 @@ function discuzToDeepseekTrustedRequest($cache, $id, $come)
         return discuzToDeepseekHashEquals($expected, $token);
     }
 
-    return isset($_GET['formhash']) && $_GET['formhash'] == FORMHASH;
+    return isset($_GET['formhash']) && $_GET['formhash'] === FORMHASH;
 }
 
 function discuzToDeepseekHashEquals($knownString, $userString)
