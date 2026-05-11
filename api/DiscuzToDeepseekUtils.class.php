@@ -4,13 +4,13 @@ if (!defined('IN_DISCUZ')) {
     exit('Access Denied');
 }
 
-class ApoylDeepseekAiPostUtils
+class DiscuzToDeepseekUtils
 {
     public static function pluginConfig()
     {
         global $_G;
-        return isset($_G['cache']['plugin']['apoyl_deepseekaipost']) && is_array($_G['cache']['plugin']['apoyl_deepseekaipost'])
-            ? $_G['cache']['plugin']['apoyl_deepseekaipost']
+        return isset($_G['cache']['plugin']['discuz_to_deepseek']) && is_array($_G['cache']['plugin']['discuz_to_deepseek'])
+            ? $_G['cache']['plugin']['discuz_to_deepseek']
             : array();
     }
 
@@ -85,14 +85,14 @@ class ApoylDeepseekAiPostUtils
     public static function renderAutoScript($url, $openonload)
     {
         $return = '';
-        $apoyl_deepseekaipost_url = $url;
-        include template('apoyl_deepseekaipost:auto');
+        $discuz_to_deepseek_url = $url;
+        include template('discuz_to_deepseek:auto');
         return $return;
     }
 
     public static function buildThreadUrl($tid, $isGroup)
     {
-        $url = 'plugin.php?id=apoyl_deepseekaipost';
+        $url = 'plugin.php?id=discuz_to_deepseek';
         if ($isGroup) {
             $url .= '&come=group';
         }
@@ -101,7 +101,7 @@ class ApoylDeepseekAiPostUtils
 
     public static function buildArticleUrl($aid)
     {
-        return 'plugin.php?id=apoyl_deepseekaipost:article&articleid=' . intval($aid) . '&formhash=' . FORMHASH;
+        return 'plugin.php?id=discuz_to_deepseek:article&articleid=' . intval($aid) . '&formhash=' . FORMHASH;
     }
 
     public static function componentFile($filename)
@@ -120,7 +120,7 @@ class ApoylDeepseekAiPostUtils
             return;
         }
 
-        C::t('#apoyl_deepseekaipost#apoyl_deepseekaipost_error')->insert(array(
+        C::t('#discuz_to_deepseek#discuz_to_deepseek_error')->insert(array(
             'tid' => intval($tid),
             'message' => (string)$message,
             'addtime' => TIMESTAMP

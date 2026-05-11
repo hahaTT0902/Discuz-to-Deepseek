@@ -4,8 +4,8 @@ if (!defined('IN_DISCUZ') || !defined('IN_ADMINCP')) {
     exit('Access Denied');
 }
 
-$pluginIdentifier = 'apoyl_deepseekaipost';
-$pluginId = apoylPromptPluginId(isset($pluginid) ? $pluginid : 0, $pluginIdentifier);
+$pluginIdentifier = 'discuz_to_deepseek';
+$pluginId = discuzToDeepseekPromptPluginId(isset($pluginid) ? $pluginid : 0, $pluginIdentifier);
 $formAction = 'plugins&operation=config&do=' . intval($pluginId) . '&identifier=' . $pluginIdentifier . '&pmod=adminprompt';
 $baseurl = ADMINSCRIPT . '?action=' . $formAction;
 
@@ -17,8 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['promptsubmit'])) {
     $systemPrompt = isset($_POST['deepseek_system_prompt']) ? trim($_POST['deepseek_system_prompt']) : '';
     $userPrompt = isset($_POST['deepseek_user_prompt']) ? trim($_POST['deepseek_user_prompt']) : '';
 
-    apoylPromptSaveVar($pluginId, 'deepseek_system_prompt', $systemPrompt, 'DeepSeek system prompt');
-    apoylPromptSaveVar($pluginId, 'deepseek_user_prompt', $userPrompt, 'DeepSeek user prompt template');
+    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_system_prompt', $systemPrompt, 'DeepSeek system prompt');
+    discuzToDeepseekPromptSaveVar($pluginId, 'deepseek_user_prompt', $userPrompt, 'DeepSeek user prompt template');
 
     if (function_exists('updatecache')) {
         updatecache('plugin');
@@ -27,15 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['promptsubmit'])) {
     cpmsg('plugins_edit_succeed', $baseurl, 'succeed');
 }
 
-$systemPrompt = apoylPromptFetchVar($pluginId, 'deepseek_system_prompt');
-$userPrompt = apoylPromptFetchVar($pluginId, 'deepseek_user_prompt');
+$systemPrompt = discuzToDeepseekPromptFetchVar($pluginId, 'deepseek_system_prompt');
+$userPrompt = discuzToDeepseekPromptFetchVar($pluginId, 'deepseek_user_prompt');
 
 showformheader($formAction);
-showtableheader('DeepSeek Prompt');
+showtableheader('Discuz to Deepseek Prompt');
 
 showtablerow('', array('colspan="2"'), array(
     '<div style="color:#666;line-height:1.8;">' .
-    '系统 Prompt 会作为 system message 发送。用户 Prompt 模板留空时使用原始帖子内容；填写后可使用变量：<code>{content}</code> / <code>{text}</code> 帖子内容，<code>{role}</code> 角色设定。' .
+    'System Prompt is sent as the system message. User Prompt Template is optional; when empty, the raw thread content is used. Available variables: <code>{content}</code> / <code>{text}</code> for post content, <code>{role}</code> for role prompt.' .
     '</div>'
 ));
 
@@ -45,7 +45,7 @@ showsubmit('promptsubmit');
 showtablefooter();
 showformfooter();
 
-function apoylPromptPluginId($pluginid, $identifier)
+function discuzToDeepseekPromptPluginId($pluginid, $identifier)
 {
     $pluginid = intval($pluginid);
     if ($pluginid > 0) {
@@ -56,7 +56,7 @@ function apoylPromptPluginId($pluginid, $identifier)
     return $plugin ? intval($plugin['pluginid']) : 0;
 }
 
-function apoylPromptFetchVar($pluginid, $variable)
+function discuzToDeepseekPromptFetchVar($pluginid, $variable)
 {
     if (!$pluginid) {
         return '';
@@ -66,7 +66,7 @@ function apoylPromptFetchVar($pluginid, $variable)
     return $row ? $row['value'] : '';
 }
 
-function apoylPromptSaveVar($pluginid, $variable, $value, $title)
+function discuzToDeepseekPromptSaveVar($pluginid, $variable, $value, $title)
 {
     if (!$pluginid) {
         return;

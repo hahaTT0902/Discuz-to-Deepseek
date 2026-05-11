@@ -4,7 +4,7 @@ if (!defined('IN_DISCUZ')) {
     exit('Access Denied');
 }
 
-class ApoylDeepseekAipost
+class DiscuzToDeepseekClient
 {
     const COMP = 'https://api.deepseek.com/chat/completions';
     const CONNECT_TIMEOUT = 15;
@@ -70,12 +70,12 @@ class ApoylDeepseekAipost
 
         $messages = array();
         if ($rolename) {
-            $messages[] = array('role' => 'system', 'content' => $this->apoylUtf($rolename, CHARSET));
+            $messages[] = array('role' => 'system', 'content' => $this->convertToUtf8($rolename, CHARSET));
         }
 
         $messages[] = array(
             'role' => 'user',
-            'content' => $this->apoylUtf($prompt, CHARSET),
+            'content' => $this->convertToUtf8($prompt, CHARSET),
         );
 
         $model = !empty($cache['deepseekllm']) && intval($cache['deepseekllm']) == 2
@@ -102,7 +102,7 @@ class ApoylDeepseekAipost
         ));
     }
 
-    private function apoylUtf($var, $charset)
+    private function convertToUtf8($var, $charset)
     {
         if ($charset == 'gbk') {
             return diconv($var, $charset, 'utf-8');

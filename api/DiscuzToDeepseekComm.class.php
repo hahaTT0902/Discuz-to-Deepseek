@@ -4,9 +4,9 @@ if (!defined('IN_DISCUZ')) {
     exit('Access Denied');
 }
 
-require_once dirname(__FILE__) . '/ApoylDeepseekAiPostUtils.class.php';
+require_once dirname(__FILE__) . '/DiscuzToDeepseekUtils.class.php';
 
-class ApoylDeepseekAiPostComm
+class DiscuzToDeepseekComm
 {
     public function factoryAotu($text, $rolename, $cache)
     {
@@ -15,15 +15,15 @@ class ApoylDeepseekAiPostComm
         $reobj = '';
 
         if (!empty($cache['selectplatform']) && intval($cache['selectplatform']) == 2 && !empty($cache['aliyunapikey']) && !empty($cache['openaliyunds'])) {
-            $file = ApoylDeepseekAiPostUtils::componentFile('aliyun');
+            $file = DiscuzToDeepseekUtils::componentFile('aliyun');
             if ($file) {
                 include $file;
             }
         } else {
-            require_once dirname(__FILE__) . '/ApoylDeepseekAipost.class.php';
-            $apoyldeepseekaipost = new ApoylDeepseekAipost();
+            require_once dirname(__FILE__) . '/DiscuzToDeepseekClient.class.php';
+            $discuzToDeepseekClient = new DiscuzToDeepseekClient();
             list($text, $rolename) = $this->applyPromptSettings($text, $rolename, $cache);
-            $reobj = $apoyldeepseekaipost->getTextDavinci($text, $rolename, $cache);
+            $reobj = $discuzToDeepseekClient->getTextDavinci($text, $rolename, $cache);
 
             $obj = json_decode($reobj);
             if ($obj && isset($obj->choices[0]->message->content)) {

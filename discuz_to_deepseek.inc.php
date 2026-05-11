@@ -4,11 +4,11 @@ if (!defined('IN_DISCUZ')) {
     exit('Access Denied');
 }
 
-require_once dirname(__FILE__) . '/api/ApoylDeepseekAiPostUtils.class.php';
+require_once dirname(__FILE__) . '/api/DiscuzToDeepseekUtils.class.php';
 
 global $_G;
 
-$cache = ApoylDeepseekAiPostUtils::pluginConfig();
+$cache = DiscuzToDeepseekUtils::pluginConfig();
 $tid = intval($_GET['tid']);
 $come = isset($_GET['come']) ? trim($_GET['come']) : '';
 $text = '';
@@ -23,38 +23,38 @@ if (!$tid) {
 }
 
 if (empty($cache['openai'])) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_close'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_close'));
 }
 
-if (!ApoylDeepseekAiPostUtils::isGroupAllowed($cache, $_G['groupid'])) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_groupid'));
+if (!DiscuzToDeepseekUtils::isGroupAllowed($cache, $_G['groupid'])) {
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_groupid'));
 }
 
 if (!isset($_GET['formhash']) || $_GET['formhash'] != FORMHASH) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_formhash'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_formhash'));
 }
 
-$userarr = ApoylDeepseekAiPostUtils::configCsvInts(isset($cache['users']) ? $cache['users'] : '');
+$userarr = DiscuzToDeepseekUtils::configCsvInts(isset($cache['users']) ? $cache['users'] : '');
 if (!$userarr) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_uid'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_uid'));
 }
 
 $postuid = $userarr[array_rand($userarr)];
 $member = C::t('common_member')->fetch($postuid);
 if (!$member) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_username'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_username'));
 }
 $postusername = $member['username'];
 
 if (!empty($cache['limitnums']) && intval($cache['limitnums']) > 0) {
     $postnum = C::t('forum_post')->count_visiblepost_by_tid($tid);
     if (intval($cache['limitnums']) <= $postnum) {
-        exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_postnum'));
+        exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_postnum'));
     }
 }
 
 if (!empty($cache['openlimittype'])) {
-    $file = _fileapoylv2('type');
+    $file = discuzToDeepseekComponentFile('type');
     if ($file) {
         include $file;
     }
@@ -65,31 +65,31 @@ if (!empty($cache['opentime']) || !empty($cache['opendelayreply']) || !empty($ca
 }
 
 if (!empty($cache['opentime']) && $threadrow && !empty($cache['limittime']) && $threadrow['dateline'] <= strtotime($cache['limittime'])) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_time'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_time'));
 }
 
 if (!empty($cache['opendelayreply']) && $threadrow) {
     $delaytime = getRandNums(isset($cache['delaytime']) ? $cache['delaytime'] : '');
     if ($delaytime && $threadrow['lastpost'] + $delaytime >= TIMESTAMP) {
-        exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_delay'));
+        exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_delay'));
     }
 }
 
 $rolename = '';
 if (!empty($cache['openrole'])) {
-    $file = _fileapoylv2('role');
+    $file = discuzToDeepseekComponentFile('role');
     if ($file) {
         include $file;
     }
 }
 
 if (!empty($cache['openfirstvip'])) {
-    $file = _fileapoylv2('firstvip');
+    $file = discuzToDeepseekComponentFile('firstvip');
     if ($file) {
         include $file;
     }
 } elseif (!empty($cache['openautoreply'])) {
-    $post = C::t('#apoyl_deepseekaipost#forum_postext')->fetch_last_new($tid, array(0, -2));
+    $post = C::t('#discuz_to_deepseek#forum_postext')->fetch_last_new($tid, array(0, -2));
     if (!$post) {
         exit();
     }
@@ -119,7 +119,7 @@ if (!empty($cache['openfirstvip'])) {
         $quotemessage = buildQuoteMessage($post, $text);
     }
 } else {
-    $modpost = C::t('#apoyl_deepseekaipost#forum_postext')->fetch_threadpost_by_tid_invisible_new($tid, -2);
+    $modpost = C::t('#discuz_to_deepseek#forum_postext')->fetch_threadpost_by_tid_invisible_new($tid, -2);
     if ($modpost) {
         exit();
     }
@@ -134,41 +134,41 @@ if (!empty($cache['openfirstvip'])) {
 }
 
 if (!$post || empty($post['fid']) || empty($post['tid'])) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_text'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_text'));
 }
 
-if ($come != 'group' && !ApoylDeepseekAiPostUtils::isForumAllowed($cache, $post['fid'])) {
+if ($come != 'group' && !DiscuzToDeepseekUtils::isForumAllowed($cache, $post['fid'])) {
     exit();
 }
 
 if (!trim($text)) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_text'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_text'));
 }
 
 if (!function_exists('curl_init')) {
-    exitWithDebug($cache, $tid, lang('plugin/apoyl_deepseekaipost', 'err_curl'));
+    exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_curl'));
 }
 
 $limitword = '';
 $openlimit = isset($cache['openlimit']) ? intval($cache['openlimit']) : 0;
 if ($openlimit > 0) {
-    $limitword = lang('plugin/apoyl_deepseekaipost', 'aiclimit' . $openlimit);
+    $limitword = lang('plugin/discuz_to_deepseek', 'aiclimit' . $openlimit);
 }
 
 if (!empty($cache['openlimittriggering'])) {
-    $file = _fileapoylv2('limittriggering');
+    $file = discuzToDeepseekComponentFile('limittriggering');
     if ($file) {
         include $file;
     }
 }
 
-require_once dirname(__FILE__) . '/api/ApoylDeepseekAiPostComm.class.php';
-$apoyldeepseekaipostcomm = new ApoylDeepseekAiPostComm();
-list($isnewcontent, $newcontent, $reobj) = $apoyldeepseekaipostcomm->factoryAotu($text . $limitword, $rolename, $cache);
+require_once dirname(__FILE__) . '/api/DiscuzToDeepseekComm.class.php';
+$discuzToDeepseekComm = new DiscuzToDeepseekComm();
+list($isnewcontent, $newcontent, $reobj) = $discuzToDeepseekComm->factoryAotu($text . $limitword, $rolename, $cache);
 
 if ($isnewcontent) {
     $invisible = 0;
-    if (!empty($cache['openinvisible']) && !in_array($_G['groupid'], ApoylDeepseekAiPostUtils::configArray($cache, 'mgroups'))) {
+    if (!empty($cache['openinvisible']) && !in_array($_G['groupid'], DiscuzToDeepseekUtils::configArray($cache, 'mgroups'))) {
         $invisible = -2;
     }
 
@@ -184,7 +184,7 @@ if ($isnewcontent) {
         'authorid' => $postuid,
         'subject' => '',
         'dateline' => TIMESTAMP,
-        'message' => $quotemessage . apoylGbk($newcontent, CHARSET) . $from,
+        'message' => $quotemessage . discuzToDeepseekCharset($newcontent, CHARSET) . $from,
         'useip' => '',
         'invisible' => $invisible,
         'anonymous' => '0',
@@ -216,21 +216,21 @@ if ($isnewcontent) {
     }
 }
 
-debugApoylAotu(!empty($cache['opendebug']), $tid, $reobj);
+debugDiscuzToDeepseek(!empty($cache['opendebug']), $tid, $reobj);
 exit();
 
 function exitWithDebug($cache, $tid, $message)
 {
-    debugApoylAotu(!empty($cache['opendebug']), $tid, $message);
+    debugDiscuzToDeepseek(!empty($cache['opendebug']), $tid, $message);
     exit();
 }
 
-function debugApoylAotu($opendebug, $tid, $message)
+function debugDiscuzToDeepseek($opendebug, $tid, $message)
 {
-    ApoylDeepseekAiPostUtils::debug($opendebug, $tid, $message);
+    DiscuzToDeepseekUtils::debug($opendebug, $tid, $message);
 }
 
-function apoylGbk($var, $charset)
+function discuzToDeepseekCharset($var, $charset)
 {
     if ($charset == 'gbk') {
         return diconv($var, 'utf-8', $charset);
@@ -239,9 +239,9 @@ function apoylGbk($var, $charset)
     return $var;
 }
 
-function _fileapoylv2($filename)
+function discuzToDeepseekComponentFile($filename)
 {
-    return ApoylDeepseekAiPostUtils::componentFile($filename);
+    return DiscuzToDeepseekUtils::componentFile($filename);
 }
 
 function selectInput($cache, $post)
