@@ -23,7 +23,7 @@ if ($come === 'article') {
     if (!$aid) {
         exit();
     }
-    if (!isset($_GET['formhash']) || $_GET['formhash'] != FORMHASH) {
+    if (!discuzToDeepseekTrustedRequest($cache, $aid, 'article')) {
         exit();
     }
     if (!DiscuzToDeepseekUtils::canRenderArticle($cache)) {
@@ -105,7 +105,7 @@ if (!DiscuzToDeepseekUtils::isGroupAllowed($cache, $_G['groupid'])) {
     exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_groupid'));
 }
 
-if (!isset($_GET['formhash']) || $_GET['formhash'] != FORMHASH) {
+if (!discuzToDeepseekTrustedRequest($cache, $tid, $come)) {
     exitWithDebug($cache, $tid, lang('plugin/discuz_to_deepseek', 'err_formhash'));
 }
 
@@ -315,6 +315,42 @@ function discuzToDeepseekCharset($var, $charset)
 function discuzToDeepseekComponentFile($filename)
 {
     return DiscuzToDeepseekUtils::componentFile($filename);
+}
+
+function discuzToDeepseekTrustedRequest($cache, $id, $come)
+{
+    $isInternal = isset($_GET['internal']) && $_GET['internal'] === '1';
+    if ($isInternal) {
+        $token = isset($_GET['token']) ? trim($_GET['token']) : '';
+        if ($token === '') {
+            return false;
+        }
+        $expected = DiscuzToDeepseekUtils::internalToken($id, $come);
+        return discuzToDeepseekHashEquals($expected, $token);
+    }
+
+    return isset($_GET['formhash']) && $_GET['formhash'] === FORMHASH;
+}
+
+function discuzToDeepseekHashEquals($knownString, $userString)
+{
+    if (function_exists('hash_equals')) {
+        return hash_equals($knownString, $userString);
+    }
+
+    $knownString = (string)$knownString;
+    $userString = (string)$userString;
+    $knownLength = strlen($knownString);
+    $userLength = strlen($userString);
+    if ($knownLength !== $userLength) {
+        return false;
+    }
+
+    $result = 0;
+    for ($i = 0; $i < $knownLength; $i++) {
+        $result |= ord($knownString[$i]) ^ ord($userString[$i]);
+    }
+    return $result === 0;
 }
 
 function selectInput($cache, $post)
