@@ -1,3 +1,49 @@
+# Discuz-to-DeepSeek
+
+> ⚠️ This repository has been archived.  
+> 本项目已归档，不再继续维护。新版已经重构为 **Discuz PHP 插件版本**，不再使用 Python 机器人方式运行。
+
+---
+
+## Archive Notice / 归档说明
+
+This repository is the early Python-based version of Discuz-to-DeepSeek.  
+It works as an external bot that logs in to a Discuz forum, fetches posts, sends post content to the DeepSeek API, and publishes AI-generated replies automatically.
+
+However, this version is now archived because the project has been upgraded to a native **Discuz PHP plugin version**.
+
+本仓库是 Discuz-to-DeepSeek 的早期 Python 机器人版本。  
+它通过模拟登录 Discuz 论坛、抓取帖子、调用 DeepSeek API，并自动发布 AI 回复来实现功能。
+
+目前该版本已经停止维护，项目已经升级为原生 **Discuz PHP 插件版本**。新版更适合直接安装到 Discuz 后台中使用，不需要额外运行 Python 脚本。
+
+---
+
+## New Version / 新版本
+
+The new version is now a Discuz PHP plugin.
+
+新版已经改为 Discuz PHP 插件版本，主要优势包括：
+
+- 可直接在 Discuz 后台安装和管理
+- 不需要单独运行 Python 程序
+- 更适合长期部署在论坛环境中
+- 配置项可以通过插件后台管理
+- 与 Discuz 系统集成度更高
+- 更方便后续维护和扩展
+
+Please use the new Discuz PHP plugin version instead of this archived Python bot.
+
+请优先使用新版 Discuz PHP 插件版本，而不是本仓库中的 Python 机器人版本。
+
+---
+
+## Legacy Version / 旧版本说明
+
+The content below is kept only for historical reference.
+
+以下内容仅作为历史版本说明保留。
+
 # Discuz-to-Deepseek
 
 > 使用 DeepSeek AI 自动回复 Discuz 论坛帖子的机器人。
